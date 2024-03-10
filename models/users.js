@@ -1,6 +1,6 @@
-// models/user.js
 'use strict';
-export default  {
+
+export default {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('Users', {
       id: {
@@ -13,10 +13,14 @@ export default  {
         allowNull: false,
         type: Sequelize.STRING
       },
-      email: {
+      password: {
         allowNull: false,
         type: Sequelize.STRING,
         unique: true
+      },
+      status: {
+        allowNull: false,
+        type: Sequelize.STRING
       },
       createdAt: {
         allowNull: false,

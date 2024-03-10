@@ -1,6 +1,11 @@
-import express from "express";
-import { Sequelize, DataTypes } from "sequelize";
-import { createUser,getUsers,updateUser,deleteUser } from "./controllers/userscontroller.js";
+const express=require('express')
+const { Sequelize, DataTypes } = require('sequelize');
+const {
+  createUser,
+  getUsers,
+  updateUser,
+  deleteUser
+} = require('./path/to/your/module/file');
 const sequelize = new Sequelize("exam", "root", "", {
     dialect: "mysql",
     host: "localhost",

@@ -2,7 +2,7 @@
   "name": "cbt-app",
   "version": "1.0.0",
   "description": "This is cbt app",
-  "type": "module",
+  "type": "commonjs",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -13,7 +13,9 @@
     "body-parser": "^1.20.2",
     "express": "^4.18.3",
     "mysql2": "^3.9.2",
-    "sequelize": "^6.37.1",
+    "sequelize": "^6.37.1"
+  },
+  "devDependencies": {
     "sequelize-cli": "^6.6.2"
   }
 }
