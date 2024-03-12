@@ -1,13 +1,31 @@
 const User = require('../models/users.js');
 exports.createUser = async (req, res) => {
   try {
-    const { username, password,status} = req.body;
-    const user = await User.create({ username, password,status });
+    const { username, password, status } = req.body;
+    let user = { username, password, status };
+
+    // Check if an image was uploaded
+    if (req.body.image) {
+      const imageData = req.body.image;
+      const imageName = `${username}_${Date.now()}.jpg`; // Generate a unique name for the image
+      const imagePath = path.join(__dirname, 'images', imageName); // Path to save the image
+
+      // Write the image data to the file
+      await writeFileAsync(imagePath, imageData, 'base64');
+      
+      // Attach the image path to the user object
+      user.imagePath = imagePath;
+    }
+
+    // Save the user object to the database
+    user = await User.create(user);
+    
     res.json(user);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 exports.getUsers = async (req, res) => {
   try {
