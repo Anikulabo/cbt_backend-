@@ -1,0 +1,10 @@
+body {
+  background-image:linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.9)), url('../public/img/unaab.jpeg');
+  background-size: 25%; /* Let the browser handle the sizing */
+  background-repeat: no-repeat;
+  background-position: center center; /* Center the background image both vertically and horizontally */
+  background-attachment: fixed; /* Keep the background image fixed while scrolling */
+}
+.bg-lemon {
+  background-color: green /* Adjust the color code as needed */
+}

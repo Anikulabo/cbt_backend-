@@ -1,9 +1,8 @@
-const User = require('../models/question.js');
-
+const User = require('../models/users.js');
 exports.createUser = async (req, res) => {
   try {
-    const { username, email } = req.body;
-    const user = await User.create({ username, email });
+    const { username, password,status} = req.body;
+    const user = await User.create({ username, password,status });
     res.json(user);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -18,12 +17,11 @@ exports.getUsers = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
 exports.updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { username, email } = req.body;
-    await User.update({ username, email }, { where: { id } });
+    const { username, password,status } = req.body;
+    await User.update({ username, password,status }, { where: { id } });
     res.json({ message: 'User updated successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });

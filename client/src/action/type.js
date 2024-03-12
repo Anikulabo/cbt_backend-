@@ -1,0 +1,3 @@
+export const CHANGE_NUMBER='CHANGE_NUMBER';
+export const NAV="SHOW_NAV";
+export const UPDATE_ANSWERED='UPDATE_ANSWERED';

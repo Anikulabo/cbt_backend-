@@ -1,28 +1,24 @@
-const express=require('express')
-const { Sequelize, DataTypes } = require('sequelize');
+const express=require('express');
+const path=require('path');
+const {createQuestion,getQuestions,updateQuestion,deleteQuestion}=require("./controllers/questionscontroller.js")
 const {
   createUser,
   getUsers,
   updateUser,
   deleteUser
-} = require('./path/to/your/module/file');
-const sequelize = new Sequelize("exam", "root", "", {
-    dialect: "mysql",
-    host: "localhost",
-    port: 3306,
-  });
+} = require('./controllers/userscontroller.js');
 const app = express();
 app.use(express.json());
-
+app.use(express.static(path.join(__dirname, 'client','build')));
 app.get("/", (req, res) => {
-  res.send("Hi");
+  res.sendFile(path.join(__dirname, 'client/build/index.html'))
 });
-app.get('/users',getUsers);
-
-app.post('/users',createUser);
-app.put('/users/:id',updateUser);
-app.delete('/users/:id',deleteUser);
-
-app.listen(5000, () => {
-  console.log("Server listening in http://localhost:5000");
+app.get('/api/users',getUsers);
+app.post('/api/users',createUser);
+app.put('/api/users/:id',updateUser);
+app.delete('/api/users/:id',deleteUser);
+app.post('/api/questions',createQuestion);
+app.put('/api/questions/:id',updateQuestion)
+app.listen(3001, () => {
+  console.log("Server listening in http://localhost:3000");
 });
