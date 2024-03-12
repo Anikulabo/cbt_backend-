@@ -8,7 +8,7 @@ exports.createUser = async (req, res) => {
     if (req.body.image) {
       const imageData = req.body.image;
       const imageName = `${username}_${Date.now()}.jpg`; // Generate a unique name for the image
-      const imagePath = path.join(__dirname, 'images', imageName); // Path to save the image
+      const imagePath = path.join(__dirname, '../client/publuc/img', imageName); // Path to save the image
 
       // Write the image data to the file
       await writeFileAsync(imagePath, imageData, 'base64');
