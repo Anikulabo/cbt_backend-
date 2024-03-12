@@ -1,4 +1,4 @@
-import "./navtab.css";
+import "./top.css";
 import table from "./table";
 export const Easynavigator = ({ num, show,action,answered }) => {
   return (

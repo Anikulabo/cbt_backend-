@@ -1,19 +1,18 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
-import { QuizData } from './question';
-import { Provider } from 'react-redux';
-import {rootReducer} from "./reducer/index";
+import React from "react";
+import ReactDOM from "react-dom/client";
+//import "./index.css";
+import App from "./App";
+import BackgroundChanger from "./exam";
+import reportWebVitals from "./reportWebVitals";
+import { QuizData } from "./question";
+import { Provider } from "react-redux";
+import { rootReducer } from "./reducer/index";
 import { createStore } from "redux";
-export const store = createStore(rootReducer)
-const root = ReactDOM.createRoot(document.getElementById('root'));
+export const store = createStore(rootReducer);
+const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    <Provider store={store}>
-    <App questions={QuizData}/>
-    </Provider>
+        <BackgroundChanger/>
   </React.StrictMode>
 );
 

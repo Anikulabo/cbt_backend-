@@ -1,3 +1,4 @@
+import './top.css'
 let table=[];
 let tr=0;
 for (let i = 0; i < 2; i++) {

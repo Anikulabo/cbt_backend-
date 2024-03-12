@@ -9,6 +9,9 @@
   margin-top: 15px;
   width: 200px;
 }
+.bg-lemon{
+  color: rgb(81, 194, 37) ;
+}
 .user{
     display: flex;
     flex-direction: column;

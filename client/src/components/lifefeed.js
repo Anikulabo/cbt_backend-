@@ -1,3 +1,4 @@
+import './top.css'
 import React, { useRef, useEffect } from "react";
 export const CameraComponent = () => {
   const videoRef = useRef(null);

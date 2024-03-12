@@ -1,3 +1,4 @@
+import './top.css'
 export const Bottom = ({number,action,btndisplay,ctrl}) => {
   return (
     <div
