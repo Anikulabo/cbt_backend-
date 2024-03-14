@@ -1,4 +1,4 @@
-.text-lemon {
+s.text-lemon {
   color: rgb(81, 194, 37); /* Adjust the color code as needed */
 }
 .bg-lemon {
@@ -9,9 +9,26 @@
   margin-top: 15px;
   width: 200px;
 }
+.formb{
+display: inline-block;
+padding: 10px;
+border-radius: 10px;
+}
 .bg-lemon{
   color: rgb(81, 194, 37) ;
 }
+ .data{
+    width: 100%;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-bottom: 1px solid black; /* Set the bottom border */
+    outline: none; /* Remove outline */
+    transition: border-bottom-color 0.3s ease; 
+  }
+  .data:focus {
+    border-bottom-color: limegreen; /* Change bottom border color on focus */
+  }
 .user{
     display: flex;
     flex-direction: column;

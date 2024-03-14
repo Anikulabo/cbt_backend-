@@ -3,14 +3,14 @@ export const Rightbottom = () => {
   return (
     <div style={{ position: "absolute", bottom: "30px" }}>
       <button
-        className="btn text-light bg-lemon"
+        className="text-light bg-lemon formb"
         style={{ position: "relative", left: "0" }}
       >
         <i className="fa fa-upload" />
         upload a photo
       </button>
       <button
-        className="btn text-light bg-lemon"
+        className="text-light bg-lemon formb"
         style={{
           position: "relative",
           left: "50%",
@@ -21,7 +21,7 @@ export const Rightbottom = () => {
         Center Button
       </button>
       <button
-        className="btn text-light bg-lemon"
+        className="text-light bg-lemon formb"
         style={{ position: "relative", left: "70%" }}
       >
         <i className="fa fa-paper-plane" />
