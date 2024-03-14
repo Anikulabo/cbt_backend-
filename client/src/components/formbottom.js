@@ -7,7 +7,7 @@ export const Rightbottom = () => {
         style={{ position: "relative", left: "0" }}
       >
         <i className="fa fa-upload" />
-        upload a photo
+        <span style={{marginLeft:"10px"}}>Upload a photo</span>
       </button>
       <button
         className="text-light bg-lemon formb"
@@ -18,14 +18,14 @@ export const Rightbottom = () => {
         }}
       >
         <i className="fa fa-camera" />
-        Center Button
+        <span style={{marginLeft:"10px"}}>Take a photo</span>
       </button>
       <button
         className="text-light bg-lemon formb"
         style={{ position: "relative", left: "70%" }}
       >
         <i className="fa fa-paper-plane" />
-        Register
+        <span style={{marginLeft:"10px"}}>Register</span>
       </button>
     </div>
   );
