@@ -1,6 +1,10 @@
 import "./top.css";
+import { sendPassword,sendName } from "../action";
+import { useDispatch,useSelector } from "react-redux";
 export const Forms = () => {
-  return (
+   let dispatch=useDispatch();
+   let small=useSelector((state)=>state.items.warning)
+   return (
     <form className="container-fluid">
      <div style={{marginTop:"50px" ,marginLeft:"0"}}>
       UserName <br />
@@ -8,6 +12,7 @@ export const Forms = () => {
         type="text"
         className="data"
         placeholder="enter your username"
+        onChange={(event)=>dispatch(sendName(event.target.value))}
              />
       <br />
       </div>
@@ -27,6 +32,7 @@ export const Forms = () => {
         className="data"
         placeholder="re-type your password"
       />
+      <small className="text-danger" style={{display:"block"?small:"none"}}>both passwords must be equal before you can register</small>
       </div>
     </form>
   );

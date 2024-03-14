@@ -1,4 +1,4 @@
-import { CHANGE_NUMBER, NAV,UPDATE_ANSWERED } from "./type";
+import { CHANGE_NUMBER, NAV,UPDATE_ANSWERED,SEND_NAME, SEND_PASSWORD } from "./type";
 export const changenum = (number, operator,total) => {
   let newItem;
   if (operator === "add") {
@@ -28,5 +28,17 @@ export const updateAnswered=(ansi,indexi)=>{
   return{
     type:UPDATE_ANSWERED,
     payload:{ansi,indexi}
+  }
+}
+export const sendPassword=(password)=>{
+  return{
+    type:SEND_PASSWORD,
+    payload:password
+  }
+}
+export const sendName=(name)=>{
+  return{
+    type:SEND_NAME,
+    payload:name
   }
 }

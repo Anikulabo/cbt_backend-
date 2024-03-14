@@ -1,4 +1,5 @@
-import { CHANGE_NUMBER, NAV,UPDATE_ANSWERED } from "../action/type";
+import { text } from "body-parser";
+import { CHANGE_NUMBER, NAV,UPDATE_ANSWERED,SEND_PASSWORD,SEND_NAME } from "../action/type";
 const initialstate = {
   number: 0,
   answered: [],
@@ -7,6 +8,11 @@ const initialstate = {
   showAlert: true,
   showDecision: false,
   testStarted: false,
+  warning:true,
+  name:"",
+  password:"",
+  image:"",
+  score:""
 };
 export const itemreducer = (state = initialstate, action) => {
   switch (action.type) {
@@ -16,6 +22,19 @@ export const itemreducer = (state = initialstate, action) => {
         ...state,
         number: operation,
       };
+    case SEND_NAME:
+      const name=action.payload;
+      return{
+        ...state,
+        name:name,
+      }  
+    case SEND_PASSWORD:
+      const password=action.payload;
+      return{
+        ...state,
+        password:password,
+        warning:false,
+      }
     case NAV:
       const val = action.payload;
       return {
@@ -46,7 +65,7 @@ export const itemreducer = (state = initialstate, action) => {
           answered: [...state.answered, { id: indexi, answer: ansi }],
         };
       }
-    default:
+       default:
       return state;
   }
 };

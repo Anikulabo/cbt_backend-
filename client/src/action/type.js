@@ -1,3 +1,5 @@
 export const CHANGE_NUMBER='CHANGE_NUMBER';
 export const NAV="SHOW_NAV";
 export const UPDATE_ANSWERED='UPDATE_ANSWERED';
+export const SEND_PASSWORD='SEND_PASSWORD';
+export const SEND_NAME="SEND_NAME";

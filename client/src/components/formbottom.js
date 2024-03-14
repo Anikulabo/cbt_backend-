@@ -1,5 +1,7 @@
 import "./top.css";
+import { useSelector } from "react-redux";
 export const Rightbottom = () => {
+ let name=useSelector((state)=>state.items.name)
   return (
     <div style={{ position: "absolute", bottom: "30px" }}>
       <button
@@ -23,6 +25,7 @@ export const Rightbottom = () => {
       <button
         className="text-light bg-lemon formb"
         style={{ position: "relative", left: "70%" }}
+        onClick={alert(name)}
       >
         <i className="fa fa-paper-plane" />
         <span style={{marginLeft:"10px"}}>Register</span>
