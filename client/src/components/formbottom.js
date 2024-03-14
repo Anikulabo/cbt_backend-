@@ -25,7 +25,7 @@ export const Rightbottom = () => {
       <button
         className="text-light bg-lemon formb"
         style={{ position: "relative", left: "70%" }}
-        onClick={alert(name)}
+        onClick={()=>{alert(name)}}
       >
         <i className="fa fa-paper-plane" />
         <span style={{marginLeft:"10px"}}>Register</span>

@@ -7,6 +7,11 @@ module.exports = {
       path: path.resolve(__dirname, "dist"),
       filename: "main.js",
     },
+    resolve: {
+      fallback: {
+        "querystring": require.resolve("querystring-es3")
+      }
+    },
     module: {
       rules: [
         {

@@ -1,4 +1,3 @@
-import { text } from "body-parser";
 import { CHANGE_NUMBER, NAV,UPDATE_ANSWERED,SEND_PASSWORD,SEND_NAME } from "../action/type";
 const initialstate = {
   number: 0,
