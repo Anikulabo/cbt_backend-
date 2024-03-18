@@ -1,5 +1,14 @@
-import { CHANGE_NUMBER, NAV,UPDATE_ANSWERED,SEND_PASSWORD,SEND_NAME } from "../action/type";
-const initialstate = {
+import {
+  CHANGE_NUMBER,
+  NAV,
+  UPDATE_ANSWERED,
+  CHANGE_VARIABLE,
+  CHANGE_TYPE,
+  HIDEICON,
+  UPDATEERROR
+} from "../action/type";
+
+const initialState = {
   number: 0,
   answered: [],
   timeRemaining: 120,
@@ -7,47 +16,100 @@ const initialstate = {
   showAlert: true,
   showDecision: false,
   testStarted: false,
-  warning:true,
-  name:"",
-  password:"",
-  image:"",
-  score:""
+  eyeicon1: false,
+  eyeicon2: false,
+  type1: true,
+  type2: true,
+  warning: true,
+  successmessage:"",
+  error:"both passwords must be equal before you can register",
+  name: "",
+  password1: "",
+  password: "",
+  image: "",
+  score: 0,
+  status:"pending"
 };
-export const itemreducer = (state = initialstate, action) => {
+
+export const itemreducer = (state = initialState, action) => {
   switch (action.type) {
     case CHANGE_NUMBER:
-      const operation = action.payload;
       return {
         ...state,
-        number: operation,
+        number: action.payload,
       };
-    case SEND_NAME:
-      const name=action.payload;
+    case UPDATEERROR:
+    const {part,message}=action.payload  
+    if(part==="warning"){
       return{
         ...state,
-        name:name,
+        warning:!warning,
+        error:message
       }  
-    case SEND_PASSWORD:
-      const password=action.payload;
+    }
+    else{
       return{
         ...state,
-        password:password,
-        warning:false,
+        successmessage:message,
+      }
+    }  
+    case HIDEICON:
+      const where=action.payload;
+      if(where===1){
+        return{
+          ...state,
+          eyeicon1:!state.eyeicon1,
+        }
+      }else{
+        return{
+          ...state,
+          eyeicon2:!state.eyeicon2,
+        }
+      }
+      case CHANGE_TYPE:
+      const  which  = action.payload;
+     if(which===1){
+      return{
+        ...state,
+        type1:!state.type1,
+      }
+     }else{
+      return{
+        ...state,
+        type2:!state.type2,
+      }
+     }
+    case CHANGE_VARIABLE:
+      const { type, name } = action.payload;
+      if (type === "password1") {
+        return {
+          ...state,
+          password1: name,
+        };
+      } else if (type === "username") {
+        return {
+          ...state,
+          name: name,
+        };
+      } else if (type === "password" && name === state.password1) {
+        return {
+          ...state,
+          warning: !state.warning,
+          password: name,
+        };
       }
     case NAV:
-      const val = action.payload;
       return {
         ...state,
-        showtable: val,
+        showtable: action.payload,
       };
     case UPDATE_ANSWERED:
       const { ansi, indexi } = action.payload;
       const questionIndex = state.answered.findIndex(
         (item) => item.id === indexi
       );
-      let newanswered;
       if (questionIndex >= 0) {
-        newanswered = state.answered.map((ans, index) => {
+        const newAnswered = state.answered.map((ans, index) => {
           if (index === questionIndex) {
             return { id: index, answer: ansi };
           } else {
@@ -56,7 +118,7 @@ export const itemreducer = (state = initialstate, action) => {
         });
         return {
           ...state,
-          answered: newanswered,
+          answered: newAnswered,
         };
       } else {
         return {
@@ -64,7 +126,7 @@ export const itemreducer = (state = initialstate, action) => {
           answered: [...state.answered, { id: indexi, answer: ansi }],
         };
       }
-       default:
-      return state;
+    default:
+      return state; // Return the unchanged state for unknown actions
   }
 };

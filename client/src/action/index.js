@@ -1,4 +1,5 @@
-import { CHANGE_NUMBER, NAV,UPDATE_ANSWERED,SEND_NAME, SEND_PASSWORD } from "./type";
+import { UPDATE } from "sequelize/types/query-types";
+import { CHANGE_NUMBER, NAV,UPDATE_ANSWERED,CHANGE_VARIABLE,HIDEICON,CHANGE_TYPE, UPDATEERROR } from "./type";
 export const changenum = (number, operator,total) => {
   let newItem;
   if (operator === "add") {
@@ -30,15 +31,27 @@ export const updateAnswered=(ansi,indexi)=>{
     payload:{ansi,indexi}
   }
 }
-export const sendPassword=(password)=>{
+export const changeVariable=(name,type)=>{
   return{
-    type:SEND_PASSWORD,
-    payload:password
+    type:CHANGE_VARIABLE,
+    payload:{type,name}
   }
 }
-export const sendName=(name)=>{
+export const changeType=(which)=>{
   return{
-    type:SEND_NAME,
-    payload:name
+    type:CHANGE_TYPE,
+    payload:which
+  }
+}
+export const hideIcon=(which)=>{
+  return{
+    type:HIDEICON,
+    payload:which
+  }
+}
+export const updatemessage=(part,message)=>{
+  return{
+    type:UPDATEERROR,
+    payload:{part,message}
   }
 }

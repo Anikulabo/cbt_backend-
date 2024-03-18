@@ -15,10 +15,8 @@ function BackgroundChanger() {
     const interval = setInterval(() => {
       setIndex((prevIndex) => (prevIndex + 1) % images.length);
     }, 5000);
-
     return () => clearInterval(interval);
   }, []);
-
   const leftHalfStyle = {
     height: "100vh",
     backgroundImage: `url(${images[index]})`,
@@ -33,17 +31,16 @@ function BackgroundChanger() {
     left: 0,
     width: "100%",
     height: "100vh",
-    backgroundColor: 'rgba(0, 255, 0, 0.5)',
   };
 
   return (
     <div className="container-fluid h-100">
       <div className="row h-100">
-        <div className="col-6 d-flex align-items-stretch" style={leftHalfStyle}>
+        <div className="col-6  d-flex align-items-stretch" style={leftHalfStyle}>
           <div style={redHueStyle}></div>
           {/* Content for the left half */}
         </div>
-        <div className="col-6 d-flex align-items-stretch">
+        <div className="col-6  d-flex align-items-stretch">
          <Provider store={store}> 
           <Top/>
           <Forms />
@@ -54,5 +51,4 @@ function BackgroundChanger() {
     </div>
   );
 }
-
 export default BackgroundChanger;

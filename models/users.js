@@ -26,12 +26,12 @@ const User = sequelize.define(
     },
     image:{
       type:DataTypes.STRING,
-      allowNull:false,
+      allowNull:true,
       unique:true,
     }
     ,score: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     }, 
   },
   {

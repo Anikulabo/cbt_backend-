@@ -1,8 +1,8 @@
 const User = require('../models/users.js');
 exports.createUser = async (req, res) => {
   try {
-    const { username, password, status } = req.body;
-    let user = { username, password, status };
+    const { username, password, status,score } = req.body;
+    let user = { username, password, status,score };
 
     // Check if an image was uploaded
     if (req.body.image) {
