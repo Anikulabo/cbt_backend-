@@ -1,4 +1,3 @@
-import { UPDATE } from "sequelize/types/query-types";
 import { CHANGE_NUMBER, NAV,UPDATE_ANSWERED,CHANGE_VARIABLE,HIDEICON,CHANGE_TYPE, UPDATEERROR } from "./type";
 export const changenum = (number, operator,total) => {
   let newItem;

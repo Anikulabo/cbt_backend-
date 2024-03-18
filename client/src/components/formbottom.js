@@ -1,32 +1,32 @@
 import "./top.css";
 import axios from "axios";
 import { useSelector,useDispatch } from "react-redux";
-import { updateError } from "../action";
-import { useDeferredValue } from "react";
-const dispatch=useDispatch()
-const name1 = useSelector((state) => state.items.name);
-const password = useSelector((state) => state.items.password);
-const score = useSelector((state) => state.items.score);
-const status = useSelector((state) => state.items.score);
-const save = async (event, name, score, password, status) => {
-  event.preventDefault();
-  if (password !== "") {
-    try {
-      await axios.post("http:127.0.0.1:3001/api/users", {
-        username: name,
-        password: password,
-        status: status,
-        score: score,
-      });
-    } catch (error) {
-        dispatch(updateError(error))
+import { updatemessage } from "../action";
+ export const Rightbottom = () => {
+  const dispatch=useDispatch();
+  const name1 = useSelector((state) => state.items.name);
+  const password = useSelector((state) => state.items.password);
+  const score = useSelector((state) => state.items.score);
+  const status = useSelector((state) => state.items.score);
+  const save = async (event, name, score, password, status) => {
+    event.preventDefault();
+    if (password !== "") {
+      try {
+        const response=await axios.post("http:/api/users", {
+          username: name,
+          password: password,
+          status: status,
+          score: score,
+        });
+        console.log(response.data);
+        dispatch("success",response.data);
+      } catch (error) {
+          dispatch(updatemessage("warning",error))
+      }
+    }else{
+      dispatch(updatemessage("warmimg","you can't submit a emppty password"))
     }
-  }else{
-    dispatch(updateError("you can't submit a emppty password"))
-  }
-};
-export const Rightbottom = () => {
-  let name = useSelector((state) => state.items.warning);
+  };
   return (
     <div style={{ position: "absolute", bottom: "30px" }}>
       <button

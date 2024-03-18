@@ -20,7 +20,7 @@ exports.createUser = async (req, res) => {
     // Save the user object to the database
     user = await User.create(user);
     
-    res.json(user);
+    res.status(201).json({ message: 'User created successfully'});;
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

@@ -9,8 +9,10 @@ export const Forms = () => {
   let eyeicon2 = useSelector((state) => state.items.eyeicon2);
   let password2 = useSelector((state) => state.items.type2);
   return (
-   <form className="container-fluid">
-      <small className="bg-success">{useSelector((state)=>state.items.successmessage)}</small>
+    <form className="container-fluid">
+      <small style={{ marginTop: "5rem" }} className="text-success">
+        {useSelector((state) => state.items.successmessage)}
+      </small>
       <div style={{ marginTop: "50px", marginLeft: "0" }}>
         UserName <br />
         <input
@@ -41,27 +43,35 @@ export const Forms = () => {
           />
           <i
             class={!password1 ? "fa fa-eye" : "fa fa-eye-slash"}
-            style={{ display: eyeicon1 ? "block" : "none" }}
+            style={{
+              display: eyeicon1 ? "block" : "none",
+              marginLeft: "-3rem",
+            }}
             onClick={() => dispatch(changeType(1))}
           />
         </div>
         <br />
       </div>
-      <div style={{ marginTop: "50px", marginLeft: "0" }}>
+      <div
+        style={{ marginTop: "50px", marginLeft: "0" }}
+        onFocus={() => dispatch(hideIcon(2))}
+        //onBlur={() => dispatch(hideIcon(2))}
+      >
         <div style={{ display: "flex", alignItems: "center" }}>
           <input
-            type={password2?"password":"text"}
+            type={password2 ? "password" : "text"}
             className="data"
             placeholder="re-type your password"
-            onFocus={() => dispatch(hideIcon(2))}
-            //onBlur={() => dispatch(hideIcon(2))}
             onChange={(event) =>
               dispatch(changeVariable(event.target.value, "password"))
             }
           />
           <i
             class={password2 ? "fa fa-eye-slash" : "fa fa-eye"}
-            style={{ display: eyeicon2 ? "block" : "none" }}
+            style={{
+              display: eyeicon2 ? "block" : "none",
+              marginLeft: "-3rem",
+            }}
             onClick={() => {
               dispatch(changeType(2));
             }}

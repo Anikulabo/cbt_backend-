@@ -43,11 +43,11 @@ export const itemreducer = (state = initialState, action) => {
     if(part==="warning"){
       return{
         ...state,
-        warning:!warning,
+        warning:!state.warning,
         error:message
       }  
     }
-    else{
+    else if(part==="success"){
       return{
         ...state,
         successmessage:message,
