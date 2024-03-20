@@ -4,6 +4,9 @@ import { useDispatch, useSelector } from "react-redux";
 export const Forms = () => {
   let dispatch = useDispatch();
   let small = useSelector((state) => state.items.warning);
+  let error = useSelector((state) => state.items.error);
+  let passvalue = useSelector((state) => state.items.password1);
+  let name = useSelector((state) => state.items.name);
   let password1 = useSelector((state) => state.items.type1);
   let eyeicon1 = useSelector((state) => state.items.eyeicon1);
   let eyeicon2 = useSelector((state) => state.items.eyeicon2);
@@ -19,6 +22,7 @@ export const Forms = () => {
           type="text"
           className="data"
           placeholder="enter your username"
+          value={name}
           onChange={(event) =>
             dispatch(changeVariable(event.target.value, "username"))
           }
@@ -37,6 +41,7 @@ export const Forms = () => {
             type={password1 ? "password" : "text"}
             className="data"
             placeholder="input a password you can remember"
+            value={passvalue}
             onChange={(event) => {
               dispatch(changeVariable(event.target.value, "password1"));
             }}
@@ -81,7 +86,7 @@ export const Forms = () => {
           className="text-danger"
           style={{ display: small ? "block" : "none" }}
         >
-          both passwords must be equal before you can register
+          {error}
         </small>
       </div>
     </form>

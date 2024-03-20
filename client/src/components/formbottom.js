@@ -1,31 +1,32 @@
 import "./top.css";
 import axios from "axios";
-import { useSelector,useDispatch } from "react-redux";
-import { updatemessage,destroy } from "../action";
- export const Rightbottom = () => {
-  const dispatch=useDispatch();
+import { useSelector, useDispatch } from "react-redux";
+import { updatemessage, destroy } from "../action";
+export const Rightbottom = () => {
+  const dispatch = useDispatch();
   const name1 = useSelector((state) => state.items.name);
   const password = useSelector((state) => state.items.password);
   const score = useSelector((state) => state.items.score);
+  const error=useSelector((state)=>state.items.error);
   const status = useSelector((state) => state.items.score);
   const save = async (event, name, score, password, status) => {
     event.preventDefault();
     if (password !== "") {
       try {
-        const response=await axios.post("http:/api/users", {
+        const response = await axios.post("http://localhost:3001/api/users", {
           username: name,
           password: password,
           status: status,
           score: score,
         });
-        dispatch(destroy());
-        console.log(response.data);;
-        dispatch("success",response.data);
+         dispatch(destroy());
+        alert(response.data.message)
+        console.log(response.data.message);
       } catch (error) {
-          dispatch(updatemessage("warning",error))
+        dispatch(updatemessage("warning", error));
       }
-    }else{
-      dispatch(updatemessage("warmimg","you can't submit a emppty password"))
+    } else {
+      dispatch(updatemessage("warning", "you can't submit a emppty password"));
     }
   };
   return (
@@ -52,7 +53,7 @@ import { updatemessage,destroy } from "../action";
         className="text-light bg-lemon formb"
         style={{ position: "relative", left: "70%" }}
         onClick={(event) => {
-          save(event,name1,score,password,status);
+          save(event, name1, score, password, status);
         }}
       >
         <i className="fa fa-paper-plane" />

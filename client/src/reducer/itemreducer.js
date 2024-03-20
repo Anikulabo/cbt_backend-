@@ -22,7 +22,7 @@ const initialState = {
   type2: true,
   warning: true,
   successmessage:"",
-  error:"both passwords must be equal before you can register",
+  error:"something is wrong with the server",
   name: "",
   password1: "",
   password: "",
