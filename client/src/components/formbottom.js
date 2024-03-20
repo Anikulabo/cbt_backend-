@@ -1,7 +1,7 @@
 import "./top.css";
 import axios from "axios";
 import { useSelector,useDispatch } from "react-redux";
-import { updatemessage } from "../action";
+import { updatemessage,destroy } from "../action";
  export const Rightbottom = () => {
   const dispatch=useDispatch();
   const name1 = useSelector((state) => state.items.name);
@@ -18,7 +18,8 @@ import { updatemessage } from "../action";
           status: status,
           score: score,
         });
-        console.log(response.data);
+        dispatch(destroy());
+        console.log(response.data);;
         dispatch("success",response.data);
       } catch (error) {
           dispatch(updatemessage("warning",error))

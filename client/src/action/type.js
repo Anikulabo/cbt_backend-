@@ -6,3 +6,4 @@ export const CHANGE_VARIABLE="CHANGE_VARIABLE";
 export const CHANGE_TYPE='CHANGE_TYPE';
 export const HIDEICON='HIDEICON';
 export const UPDATEERROR="UPDATEERROR";
+export const DESTROY="DESTROY";

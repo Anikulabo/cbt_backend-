@@ -5,9 +5,9 @@ import {
   CHANGE_VARIABLE,
   CHANGE_TYPE,
   HIDEICON,
-  UPDATEERROR
+  UPDATEERROR,
+  DESTROY
 } from "../action/type";
-
 const initialState = {
   number: 0,
   answered: [],
@@ -38,18 +38,26 @@ export const itemreducer = (state = initialState, action) => {
         ...state,
         number: action.payload,
       };
+    case DESTROY:
+      return{
+        ...state,
+        name:"",
+        password1:"",
+        password:""
+      }  
     case UPDATEERROR:
     const {part,message}=action.payload  
     if(part==="warning"){
       return{
         ...state,
-        warning:!state.warning,
+        warning:true,
         error:message
       }  
     }
-    else if(part==="success"){
+   if(part==="success"){
       return{
         ...state,
+        warning:false,
         successmessage:message,
       }
     }  
