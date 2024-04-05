@@ -20,19 +20,17 @@ const User = sequelize.define(
       allowNull: false,
       unique: true,
     },
-    status: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
     image:{
       type:DataTypes.STRING,
       allowNull:true,
       unique:true,
     }
-    ,score: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    }, 
+    ,
+    department:{
+      type:DataTypes.STRING,
+      allowNull:false,
+      unique:false
+    }
   },
   {
     // Other model options

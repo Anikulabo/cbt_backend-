@@ -10,6 +10,11 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
+      subject:{
+        allowNull:false,
+        type:Sequelize.STRING,
+        unique:true
+      },
       question: {
         allowNull: false,
         type: Sequelize.STRING,

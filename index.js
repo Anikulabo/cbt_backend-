@@ -1,5 +1,6 @@
 const express=require('express');
 const path=require('path');
+const User=require("./models/users.js");
 const {createQuestion,getQuestions,updateQuestion,deleteQuestion}=require("./controllers/questionscontroller.js")
 const {
   createUser,

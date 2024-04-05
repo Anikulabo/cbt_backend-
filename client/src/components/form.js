@@ -30,8 +30,6 @@ export const Forms = () => {
         <br />
       </div>
       <div
-        onFocus={() => dispatch(hideIcon(1))}
-        //onBlur={() => dispatch(hideIcon(1))}
         style={{ marginTop: "50px", marginLeft: "0" }}
       >
         Password
@@ -44,6 +42,7 @@ export const Forms = () => {
             value={passvalue}
             onChange={(event) => {
               dispatch(changeVariable(event.target.value, "password1"));
+              dispatch(hideIcon(1,event.target.value.length))
             }}
           />
           <i
@@ -59,16 +58,16 @@ export const Forms = () => {
       </div>
       <div
         style={{ marginTop: "50px", marginLeft: "0" }}
-        onFocus={() => dispatch(hideIcon(2))}
-        //onBlur={() => dispatch(hideIcon(2))}
       >
         <div style={{ display: "flex", alignItems: "center" }}>
           <input
             type={password2 ? "password" : "text"}
             className="data"
             placeholder="re-type your password"
-            onChange={(event) =>
+            onChange={(event) =>{
               dispatch(changeVariable(event.target.value, "password"))
+              dispatch(hideIcon(2,event.target.value.length))
+            }
             }
           />
           <i

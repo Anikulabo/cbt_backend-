@@ -10,6 +10,11 @@ const Question = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
+    subject:{
+      type:DataTypes.STRING,
+      allowNull:false,
+      unique:false
+    },
     question: {
       type: DataTypes.STRING,
       allowNull: false,

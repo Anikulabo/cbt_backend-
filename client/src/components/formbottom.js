@@ -57,10 +57,11 @@ export const Rightbottom = () => {
         alert(response.data.message)
         console.log(response.data.message);
       } catch (error) {
-        dispatch(updatemessage("warning", error));
+        console.log(error.message);
+         dispatch(updatemessage("warning", error.message));
       }
     } else {
-      dispatch(updatemessage("warning", "you can't submit a emppty password"));
+      dispatch(updatemessage("warning", "you can't submit a empty password"));
     }
   };
   return (

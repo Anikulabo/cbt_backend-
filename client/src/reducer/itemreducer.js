@@ -6,7 +6,7 @@ import {
   CHANGE_TYPE,
   HIDEICON,
   UPDATEERROR,
-  DESTROY
+  DESTROY,
 } from "../action/type";
 const initialState = {
   number: 0,
@@ -21,14 +21,14 @@ const initialState = {
   type1: true,
   type2: true,
   warning: true,
-  successmessage:"",
-  error:"something is wrong with the server",
+  successmessage: "",
+  error: "both passwords must be equal before you can register",
   name: "",
   password1: "",
   password: "",
   image: "",
   score: 0,
-  status:"pending"
+  status: "pending",
 };
 
 export const itemreducer = (state = initialState, action) => {
@@ -39,54 +39,68 @@ export const itemreducer = (state = initialState, action) => {
         number: action.payload,
       };
     case DESTROY:
-      return{
+      return {
         ...state,
-        name:"",
-        password1:"",
-        password:""
-      }  
+        name: "",
+        password1: "",
+        password: "",
+      };
     case UPDATEERROR:
-    const {part,message}=action.payload  
-    if(part==="warning"){
-      return{
-        ...state,
-        warning:true,
-        error:message
-      }  
-    }
-   if(part==="success"){
-      return{
-        ...state,
-        warning:false,
-        successmessage:message,
+      const { part, message } = action.payload;
+      if (part === "warning") {
+        return {
+          ...state,
+          warning: true,
+          error: message,
+        };
       }
-    }  
+      if (part === "success") {
+        return {
+          ...state,
+          warning: false,
+          successmessage: message,
+        };
+      }
     case HIDEICON:
-      const where=action.payload;
-      if(where===1){
-        return{
+      const { where, length } = action.payload;
+      if (where === 1 && length >= 1) {
+        return {
           ...state,
-          eyeicon1:!state.eyeicon1,
-        }
-      }else{
-        return{
+          eyeicon1: true,
+        };
+      }
+      if (where === 1 && length <= 0) {
+        return {
           ...state,
-          eyeicon2:!state.eyeicon2,
+          eyeicon1: false,
+        };
+      } else {
+        if (where === 2 && length >= 1) {
+          return {
+            ...state,
+            eyeicon2: true,
+          };
+        }
+        if (where === 2 && length <= 0) {
+          return {
+            ...state,
+            eyeicon2: false,
+          };
         }
       }
-      case CHANGE_TYPE:
-      const  which  = action.payload;
-     if(which===1){
-      return{
-        ...state,
-        type1:!state.type1,
+    case CHANGE_TYPE:
+      const which = action.payload;
+      if (which === 1) {
+        return {
+          ...state,
+          type1: !state.type1,
+        };
+      } else {
+        return {
+          ...state,
+          type2: !state.type2,
+        };
       }
-     }else{
-      return{
-        ...state,
-        type2:!state.type2,
-      }
-     }
     case CHANGE_VARIABLE:
       const { type, name } = action.payload;
       if (type === "password1") {

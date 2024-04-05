@@ -50,10 +50,10 @@ export const changeType = (which) => {
     payload: which,
   };
 };
-export const hideIcon = (which) => {
+export const hideIcon = (where,length) => {
   return {
     type: HIDEICON,
-    payload: which,
+    payload: {where,length}
   };
 };
 export const destroy = () => {
