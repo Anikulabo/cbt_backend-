@@ -1,21 +1,21 @@
 const User = require('../models/users.js');
 exports.createUser = async (req, res) => {
   try {
-    const { username, password, status,score } = req.body;
-    let user = { username, password, status,score };
+    const { username, password, image,department } = req.body;
+    let user = { username, password, image,department};
 
     // Check if an image was uploaded
-    if (req.body.image) {
-      const imageData = req.body.image;
-      const imageName = `${username}_${Date.now()}.jpg`; // Generate a unique name for the image
-      const imagePath = path.join(__dirname, '../client/publuc/img', imageName); // Path to save the image
+    // if (req.body.image) {
+    //   const imageData = req.body.image;
+    //   const imageName = `${username}_${Date.now()}.jpg`; // Generate a unique name for the image
+    //   const imagePath = path.join(__dirname, '../client/publuc/img', imageName); // Path to save the image
 
-      // Write the image data to the file
-      await writeFileAsync(imagePath, imageData, 'base64');
+    //   // Write the image data to the file
+    //   await writeFileAsync(imagePath, imageData, 'base64');
       
-      // Attach the image path to the user object
-      user.imagePath = imagePath;
-    }
+    //   // Attach the image path to the user object
+    //   user.imagePath = imagePath;
+    // }
 
     // Save the user object to the database
     user = await User.create(user);
@@ -25,8 +25,6 @@ exports.createUser = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
-
 exports.getUsers = async (req, res) => {
   try {
     const users = await User.findAll();
@@ -45,7 +43,6 @@ exports.updateUser = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
 exports.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
