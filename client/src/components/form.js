@@ -87,6 +87,19 @@ export const Forms = () => {
         >
           {error}
         </small>
+        <div style={{ marginTop: "50px", marginLeft: "0" }}>
+        Department <br />
+        <input
+          type="text"
+          className="data"
+          placeholder="enter your username"
+          value={name}
+          onChange={(event) =>
+            dispatch(changeVariable(event.target.value, "username"))
+          }
+        />
+        <br />
+      </div>
       </div>
     </form>
   );

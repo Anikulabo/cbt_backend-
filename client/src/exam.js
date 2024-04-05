@@ -4,6 +4,7 @@ import { Provider } from "react-redux";
 import { rootReducer } from "./reducer";
 import { createStore } from "redux";
 import "bootstrap/dist/css/bootstrap.min.css";
+import "./components/top.css"
 import exam2 from "./components/img/exam2.jpg";
 import exam1 from "./components/img/exam1.jpg";
 import exam3 from "./components/img/exam3.jpg";
@@ -40,7 +41,7 @@ function BackgroundChanger() {
           <div style={redHueStyle}></div>
           {/* Content for the left half */}
         </div>
-        <div className="col-6  d-flex align-items-stretch">
+        <div className="col-6 formholder d-flex align-items-stretch">
          <Provider store={store}> 
           <Top/>
           <Forms />

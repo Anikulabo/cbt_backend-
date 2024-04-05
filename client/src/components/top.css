@@ -70,7 +70,24 @@ input[type="radio"]:checked + label {
     border-radius: 50%;
     display: none;
   }
-
+  .formholder {
+    position: relative;
+  }
+  
+  .formholder::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px; /* Adjust the width and height of the icon */
+    height: 300px;
+    background-image: url('img/unaab.jpeg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: 0.3; /* Adjust opacity if needed */
+  }
+  
   input[type="radio"]:checked + label::before {
     display: block;
   }

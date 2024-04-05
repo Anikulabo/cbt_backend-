@@ -5,7 +5,7 @@ export const Top = () => {
       style={{
         position: "absolute",
         top: "5px",
-        left: "60%",
+        left: "40%",
         height: "5vh",
         width: "20%",
         textAlign: "center",
