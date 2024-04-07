@@ -34,7 +34,7 @@ const User = sequelize.define(
   {
     // Other model options
     tableName: "Users", // Name of the table in the database
-    timestamps: true, // Include timestamps (createdAt, updatedAt)
+    timestamps: false 
   }
 );
 

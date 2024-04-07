@@ -23,12 +23,9 @@ const initialState = {
   warning: true,
   successmessage: "",
   error: "both passwords must be equal before you can register",
-  name: "",
+  biodata: { username: "", password: "", department: "", image: "", score: 0 },
   password1: "",
-  password: "",
-  image: "",
-  score: 0,
-  status: "pending",
+  password2: "",
 };
 
 export const itemreducer = (state = initialState, action) => {
@@ -41,9 +38,17 @@ export const itemreducer = (state = initialState, action) => {
     case DESTROY:
       return {
         ...state,
-        name: "",
-        password1: "",
-        password: "",
+        password1:"",
+        password2:"",
+        eyeicon1: false,
+        eyeicon2: false,
+        biodata: {
+          name: "",
+          password: "",
+          department: "",
+          image: "",
+          score: 0,
+        },
       };
     case UPDATEERROR:
       const { part, message } = action.payload;
@@ -108,16 +113,33 @@ export const itemreducer = (state = initialState, action) => {
           ...state,
           password1: name,
         };
-      } else if (type === "username") {
+      }
+      if (type === "username") {
         return {
           ...state,
-          name: name,
+          biodata: { ...state.biodata, username: name, image: name },
         };
-      } else if (type === "password" && name === state.password1) {
+      }
+      if (type === "password2") {
+        if(name===state.password1){
+          return{
+            ...state,
+            password2:name,
+            warning:false,
+            biodata:{...state.biodata,password:name}
+          }
+        }else{
+          return {
+            ...state,
+            password2: name,
+            warning:true
+          };
+        }
+      }
+      if (type === "department") {
         return {
           ...state,
-          warning: !state.warning,
-          password: name,
+          biodata: { ...state.biodata, department: name },
         };
       }
     case NAV:

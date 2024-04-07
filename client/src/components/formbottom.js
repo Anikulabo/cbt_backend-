@@ -4,19 +4,14 @@ import { useSelector, useDispatch } from "react-redux";
 import { updatemessage, destroy } from "../action";
 export const Rightbottom = () => {
   const dispatch = useDispatch();
-  const name1 = useSelector((state) => state.items.name);
-  const password = useSelector((state) => state.items.password);
-  const score = useSelector((state) => state.items.score);
-  const error=useSelector((state)=>state.items.error);
-  const status = useSelector((state) => state.items.score);
+  const datas = useSelector((state) => state.items.biodata);
+  const error = useSelector((state) => state.items.error);
   const handleUploadPhoto = () => {
     // Display an alert to inform the user
-    alert("Please upload your own photo. Using someone else's photo may have consequences.");
-    
     // Access the file input element to trigger file selection
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.jpeg, .jpg, .png, .gif'; // Allow specified image file types
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = ".jpeg, .jpg, .png, .gif"; // Allow specified image file types
     fileInput.onchange = (event) => {
       const file = event.target.files[0];
       if (file) {
@@ -27,7 +22,10 @@ export const Rightbottom = () => {
           img.onload = () => {
             // Image loaded successfully, proceed with further processing
             // Set the file name to the user's username
-            const fileName = `${name1}.${file.name.split('.').pop().toLowerCase()}`;
+            const fileName = `${datas.name}.${file.name
+              .split(".")
+              .pop()
+              .toLowerCase()}`;
             // Here you can further process the file (e.g., upload to a server)
             // For demonstration, I'm just logging the file name
             console.log("Selected file name:", fileName);
@@ -43,25 +41,39 @@ export const Rightbottom = () => {
     };
     fileInput.click(); // Trigger the file input click event
   };
-  const save = async (event, name, score, password, status) => {
+  const save = async (data, event) => {
     event.preventDefault();
-    if (password !== "") {
-      try {
-        const response = await axios.post("http://localhost:3001/api/users", {
-          username: name,
-          password: password,
-          status: status,
-          score: score,
-        });
-         dispatch(destroy());
-        alert(response.data.message)
-        console.log(response.data.message);
-      } catch (error) {
-        console.log(error.message);
-         dispatch(updatemessage("warning", error.message));
+    let nodata = [];
+    for (let key in data) {
+      if (typeof data[key] === "string" && data[key].trim() === "") {
+        nodata.push(`${key}`);
       }
+    }
+    if (nodata.length >= 1) {
+      dispatch(
+        updatemessage(
+          "warning",
+          "you.ve to fill in your " + nodata + " before you can register"
+        )
+      );
     } else {
-      dispatch(updatemessage("warning", "you can't submit a empty password"));
+      try {
+        const response = await axios.post(
+          "http://localhost:3001/api/users",
+          data
+        );
+        console.log(response.data); // Handle response from server
+        alert(response.data);
+      } catch (error) {
+        if (error.response.status >= 400) {
+          dispatch(
+            updatemessage(
+              "warning",
+              "there was an eror during registration or the username is not unique"
+            )
+          );
+        }
+      }
     }
   };
   return (
@@ -69,6 +81,12 @@ export const Rightbottom = () => {
       <button
         className="text-light bg-lemon formb"
         style={{ position: "relative", left: "0" }}
+        onClick={() => {
+          handleUploadPhoto();
+          alert(
+            "Please upload your own photo. Using someone else's photo may have consequences."
+          );
+        }}
       >
         <i className="fa fa-upload" />
         <span style={{ marginLeft: "10px" }}>Upload a photo</span>
@@ -88,7 +106,7 @@ export const Rightbottom = () => {
         className="text-light bg-lemon formb"
         style={{ position: "relative", left: "70%" }}
         onClick={(event) => {
-          save(event, name1, score, password, status);
+          save(datas, event);
         }}
       >
         <i className="fa fa-paper-plane" />

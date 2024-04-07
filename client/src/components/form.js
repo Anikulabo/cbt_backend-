@@ -5,8 +5,9 @@ export const Forms = () => {
   let dispatch = useDispatch();
   let small = useSelector((state) => state.items.warning);
   let error = useSelector((state) => state.items.error);
-  let passvalue = useSelector((state) => state.items.password1);
-  let name = useSelector((state) => state.items.name);
+  let pass1 = useSelector((state) => state.items.password1);
+  let pass2=useSelector((state)=>state.items.password2);
+  let data = useSelector((state) => state.items.biodata);
   let password1 = useSelector((state) => state.items.type1);
   let eyeicon1 = useSelector((state) => state.items.eyeicon1);
   let eyeicon2 = useSelector((state) => state.items.eyeicon2);
@@ -22,7 +23,7 @@ export const Forms = () => {
           type="text"
           className="data"
           placeholder="enter your username"
-          value={name}
+          value={data.username}
           onChange={(event) =>
             dispatch(changeVariable(event.target.value, "username"))
           }
@@ -38,8 +39,8 @@ export const Forms = () => {
           <input
             type={password1 ? "password" : "text"}
             className="data"
-            placeholder="input a password you can remember"
-            value={passvalue}
+            placeholder="input your surname as password"
+            value={pass1}
             onChange={(event) => {
               dispatch(changeVariable(event.target.value, "password1"));
               dispatch(hideIcon(1,event.target.value.length))
@@ -64,8 +65,9 @@ export const Forms = () => {
             type={password2 ? "password" : "text"}
             className="data"
             placeholder="re-type your password"
+            value={pass2}
             onChange={(event) =>{
-              dispatch(changeVariable(event.target.value, "password"))
+              dispatch(changeVariable(event.target.value, "password2"))
               dispatch(hideIcon(2,event.target.value.length))
             }
             }
@@ -92,13 +94,16 @@ export const Forms = () => {
         <input
           type="text"
           className="data"
-          placeholder="enter your username"
-          value={name}
+          placeholder="enter your department"
+          value={data.department}
           onChange={(event) =>
-            dispatch(changeVariable(event.target.value, "username"))
+            dispatch(changeVariable(event.target.value, "department"))
           }
         />
         <br />
+      </div>
+      <div style={{ marginTop: "50px", marginLeft: "0" }}>
+        <img/>
       </div>
       </div>
     </form>
