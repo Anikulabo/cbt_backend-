@@ -1,4 +1,8 @@
+const fs = require('fs');
 const User = require('../models/users.js');
+const path = require('path');
+const { promisify } = require('util');
+const writeFileAsync = promisify(fs.writeFile);
 exports.createUser = async (req, res) => {
   try {
     const { username, password, image,department } = req.body;
@@ -8,7 +12,7 @@ exports.createUser = async (req, res) => {
     if (req.body.image) {
       const imageData = req.body.image;
       const imageName = `${username}.jpg`; // Generate a unique name for the image
-      const imagePath = path.join(__dirname, '../client/publuc/img', imageName); // Path to save the image
+      const imagePath = path.join(__dirname, '../client/public/img', imageName); // Path to save the image
       // Write the image data to the file
       await writeFileAsync(imagePath, imageData, 'base64');
       
