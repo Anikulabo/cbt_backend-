@@ -1,4 +1,4 @@
-s.text-lemon {
+.text-lemon {
   color: rgb(81, 194, 37); /* Adjust the color code as needed */
 }
 .bg-lemon {
@@ -13,9 +13,6 @@ s.text-lemon {
 display: inline-block;
 padding: 10px;
 border-radius: 10px;
-}
-.bg-lemon{
-  color: rgb(81, 194, 37) ;
 }
  .data{
     width: 100%;

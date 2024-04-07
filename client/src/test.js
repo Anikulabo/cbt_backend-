@@ -1,4 +1,4 @@
-import "./index.css";
+import "./test.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Welcome, Main } from "./components";
 import { useState, useEffect } from "react";
