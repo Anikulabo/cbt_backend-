@@ -1,67 +1,39 @@
-import "./App.css";
-import "bootstrap/dist/css/bootstrap.min.css";
-import { Welcome, Main } from "./components";
-import { useState, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { changenum, shownav, updateAnswered } from "./action";
-function App(props) {
-  let num = useSelector((state) => state.items.number);
-  let tabledisplay = useSelector((state) => state.items.showtable);
-  let answered = useSelector((state) => state.items.answered);
-  const [btndisplay, setBtndisplay] = useState({
-    next: "block",
-    previous: "none",
-  });
-  useEffect(() => {
-    if (num > 0) {
-      setBtndisplay((prevDisplay) => ({ ...prevDisplay, previous: "block" }));
-    } else {
-      setBtndisplay((prevDisplay) => ({ ...prevDisplay, previous: "none" }));
-    }
+import { QuizData } from "./question";
+import { Provider } from "react-redux";
+import { rootReducer } from "./reducer/index";
+import { createStore } from "redux";
+import BackgroundChanger from "./exam";
+import Test from "./test";
+import { BrowserRouter as Router, Route, Switch, Link } from 'react-router-dom';
+// Create Redux store
+export const store = createStore(rootReducer);
 
-    if (num === props.questions.length - 1) {
-      setBtndisplay((prevDisplay) => ({ ...prevDisplay, next: "none" }));
-    } else {
-      setBtndisplay((prevDisplay) => ({ ...prevDisplay, next: "block" }));
-    }
-  }, [num, props.questions.length]);
-  let dispatch = useDispatch();
-  const move = (event) => {
-    if (!isNaN(event.target.innerHTML)) {
-      dispatch(changenum(num, event.target.innerHTML, props.questions.length));
-    }
-    if (parseInt(event.target.innerHTML) > props.questions.length) {
-      alert("You have exceeded the total number of questions.");
-    } else {
-      const buttonText = event.target.innerHTML.trim().toLowerCase();
-      if (buttonText === "next") {
-        dispatch(changenum(num, "add", props.questions.length));
-      } else if (buttonText === "previous") {
-        dispatch(changenum(num, "subtract", props.questions.length));
-      }
-    }
-  };
-  const shide = () => {
-    dispatch(shownav(tabledisplay));
-  };
-  const save = (event) => {
-    let ansi = event.target.value;
-    dispatch(updateAnswered(ansi, num));
-  };
-
+function App({props}) {
   return (
-    <div className="All">
-      <Welcome />
-      <Main
-        question={props.questions[num]}
-        number={num}
-        actions={{ move: move, save: save }}
-        bottombtn={btndisplay}
-        nav={tabledisplay}
-        displayctrl={shide}
-        answers={answered}
-      />
-    </div>
+   <Router>
+      <div>
+        <nav>
+          <ul>
+            <li>
+              <Link to="/">Home</Link>
+            </li>
+            <li>
+              <Link to="/test">Test</Link>
+            </li>
+          </ul>
+        </nav>
+        <Switch>
+          <Route exact path="/" component={BackgroundChanger} />
+          {/* Wrap only the Test component with Provider */}
+          <Route path="/test" render={(props) => (
+            <Provider store={store}>
+              <Test {...props} questions={QuizData} />
+            </Provider>
+          )} />
+        </Switch>
+      </div>
+    </Router>
   );
 }
+
 export default App;

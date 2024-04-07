@@ -5,25 +5,25 @@ const { promisify } = require('util');
 const writeFileAsync = promisify(fs.writeFile);
 exports.createUser = async (req, res) => {
   try {
-    const { username, password, image,department } = req.body;
-    let user = { username, password, image,department};
+    const { username, password,  department } = req.body;
+    let user = { username, password, department };
 
-   // Check if an image was uploaded
-    if (req.body.image) {
-      const imageData = req.body.image;
+    // Check if an image was uploaded
+    if (req.file) {
+      const imageData = req.file.buffer; // Access file data from req.file.buffer
       const imageName = `${username}.jpg`; // Generate a unique name for the image
       const imagePath = path.join(__dirname, '../client/public/img', imageName); // Path to save the image
       // Write the image data to the file
       await writeFileAsync(imagePath, imageData, 'base64');
-      
+
       // Attach the image path to the user object
-      user.imagePath = imagePath;
+      user.image = username;
     }
 
     // Save the user object to the database
     user = await User.create(user);
-    
-    res.status(201).json({ message: 'User created successfully'});;
+
+    res.status(201).json({ message: 'User created successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

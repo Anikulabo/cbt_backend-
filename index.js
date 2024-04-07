@@ -1,6 +1,7 @@
 const express=require('express');
 const path=require('path');
-const User=require("./models/users.js");
+const multer  = require('multer');
+const upload = multer(); // 
 const {createQuestion,getQuestions,updateQuestion,deleteQuestion}=require("./controllers/questionscontroller.js")
 const {
   createUser,
@@ -16,7 +17,7 @@ app.get("*", (req, res) => {
 })
 ;
 app.get('/api/users',getUsers);
-app.post('/api/users',createUser);
+app.post('/api/users',upload.single('image'),createUser);
 app.put('/api/users/:id',updateUser);
 app.delete('/api/users/:id',deleteUser);
 app.post('/api/questions',createQuestion);

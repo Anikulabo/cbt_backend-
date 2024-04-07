@@ -53,10 +53,10 @@ export const itemreducer = (state = initialState, action) => {
         eyeicon2: false,
         img:"",
         biodata: {
-          name: "",
+          username: "",
           password: "",
-          department: "",
           image: null,
+          department: "",
           score: 0,
         },
       };

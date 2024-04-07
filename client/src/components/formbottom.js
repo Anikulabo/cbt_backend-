@@ -1,7 +1,8 @@
 import "./top.css";
 import axios from "axios";
 import { useSelector, useDispatch } from "react-redux";
-import { updatemessage, destroy,upload } from "../action";
+import { updatemessage, destroy, upload } from "../action";
+const formdata = new FormData();
 export const Rightbottom = () => {
   const dispatch = useDispatch();
   const datas = useSelector((state) => state.items.biodata);
@@ -17,7 +18,7 @@ export const Rightbottom = () => {
       if (file) {
         const reader = new FileReader();
         reader.onload = (e) => {
-          dispatch(upload(file,e.target.result));
+          dispatch(upload(file, e.target.result));
         };
         reader.readAsDataURL(file);
       }
@@ -43,27 +44,22 @@ export const Rightbottom = () => {
         )
       );
     } else {
+      formdata.append("username", data.username);
+      formdata.append("password", data.password);
+      formdata.append("image", data.image);
+      formdata.append("department", data.department);
       try {
-        const response = await axios.post(
-          "http://localhost:3001/api/users",
-          data
-        );
-        console.log(response.data); // Handle response from server
-        alert(response.data);
+        const response = await axios.post("http://localhost:3001/api/users", formdata);
+        console.log("Success:", response.data);
       } catch (error) {
-        if (error.response.status >= 400) {
-          dispatch(
-            updatemessage(
-              "warning",
-              "there was an eror during registration or the username is not unique"
-            )
-          );
+        if(error.response.status>=500){
+          dispatch(updatemessage("warning","there is a server error or the user is not unique"))
         }
       }
     }
   };
   return (
-    <div style={{ position: "absolute", bottom: "5px" }}>
+    <div style={{ position: "absolute", bottom: "10px" }}>
       <button
         className="text-light bg-lemon formb"
         style={{ position: "relative", left: "0" }}
