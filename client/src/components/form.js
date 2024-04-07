@@ -3,6 +3,7 @@ import { changeVariable, changeType, hideIcon } from "../action";
 import { useDispatch, useSelector } from "react-redux";
 export const Forms = () => {
   let dispatch = useDispatch();
+  let img=useSelector((state)=>state.items.img);
   let small = useSelector((state) => state.items.warning);
   let error = useSelector((state) => state.items.error);
   let pass1 = useSelector((state) => state.items.password1);
@@ -103,7 +104,7 @@ export const Forms = () => {
         <br />
       </div>
       <div style={{ marginTop: "50px", marginLeft: "0" }}>
-        <img/>
+      <img src={img} height={"100px"} width={"300px"} style={{borderRadius:"5px", marginBottom:"50px"}} alt={"your selected or photoshot comes here"} />
       </div>
       </div>
     </form>

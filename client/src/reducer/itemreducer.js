@@ -7,6 +7,7 @@ import {
   HIDEICON,
   UPDATEERROR,
   DESTROY,
+  UPLOADIMAGE
 } from "../action/type";
 const initialState = {
   number: 0,
@@ -23,6 +24,7 @@ const initialState = {
   warning: true,
   successmessage: "",
   error: "both passwords must be equal before you can register",
+  img:"",
   biodata: { username: "", password: "", department: "", image: "", score: 0 },
   password1: "",
   password2: "",
@@ -35,6 +37,13 @@ export const itemreducer = (state = initialState, action) => {
         ...state,
         number: action.payload,
       };
+    case UPLOADIMAGE:
+    const {image,shownimage}=action.payload;  
+    return{
+        ...state,
+        img:shownimage,
+        biodata:{...state.biodata,image:image}
+      }  
     case DESTROY:
       return {
         ...state,
@@ -42,11 +51,12 @@ export const itemreducer = (state = initialState, action) => {
         password2:"",
         eyeicon1: false,
         eyeicon2: false,
+        img:"",
         biodata: {
           name: "",
           password: "",
           department: "",
-          image: "",
+          image: null,
           score: 0,
         },
       };

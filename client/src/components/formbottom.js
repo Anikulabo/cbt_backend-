@@ -1,7 +1,7 @@
 import "./top.css";
 import axios from "axios";
 import { useSelector, useDispatch } from "react-redux";
-import { updatemessage, destroy } from "../action";
+import { updatemessage, destroy,upload } from "../action";
 export const Rightbottom = () => {
   const dispatch = useDispatch();
   const datas = useSelector((state) => state.items.biodata);
@@ -15,28 +15,11 @@ export const Rightbottom = () => {
     fileInput.onchange = (event) => {
       const file = event.target.files[0];
       if (file) {
-        // Check if the file is an image
         const reader = new FileReader();
         reader.onload = (e) => {
-          const img = new Image();
-          img.onload = () => {
-            // Image loaded successfully, proceed with further processing
-            // Set the file name to the user's username
-            const fileName = `${datas.name}.${file.name
-              .split(".")
-              .pop()
-              .toLowerCase()}`;
-            // Here you can further process the file (e.g., upload to a server)
-            // For demonstration, I'm just logging the file name
-            console.log("Selected file name:", fileName);
-          };
-          img.onerror = () => {
-            // Not an image, show error message
-            alert("Please upload a valid image file.");
-          };
-          img.src = e.target.result;
+          dispatch(upload(file,e.target.result));
         };
-        reader.readAsDataURL(file); // Read file as data URL
+        reader.readAsDataURL(file);
       }
     };
     fileInput.click(); // Trigger the file input click event
@@ -45,7 +28,10 @@ export const Rightbottom = () => {
     event.preventDefault();
     let nodata = [];
     for (let key in data) {
-      if (typeof data[key] === "string" && data[key].trim() === "") {
+      if (
+        (typeof data[key] === "string" && data[key].trim() === "") ||
+        data[key] === null
+      ) {
         nodata.push(`${key}`);
       }
     }
@@ -77,15 +63,15 @@ export const Rightbottom = () => {
     }
   };
   return (
-    <div style={{ position: "absolute", bottom: "30px" }}>
+    <div style={{ position: "absolute", bottom: "5px" }}>
       <button
         className="text-light bg-lemon formb"
         style={{ position: "relative", left: "0" }}
         onClick={() => {
-          handleUploadPhoto();
           alert(
             "Please upload your own photo. Using someone else's photo may have consequences."
           );
+          handleUploadPhoto();
         }}
       >
         <i className="fa fa-upload" />

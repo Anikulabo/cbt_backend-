@@ -7,6 +7,7 @@ import {
   CHANGE_TYPE,
   UPDATEERROR,
   DESTROY,
+  UPLOADIMAGE
 } from "./type";
 export const changenum = (number, operator, total) => {
   let newItem;
@@ -62,6 +63,12 @@ export const destroy = () => {
     payload: "",
   };
 };
+export const upload=(image,shownimage)=>{
+  return{
+    type:UPLOADIMAGE,
+    payload:{image,shownimage},
+  }
+}
 export const updatemessage = (part, message) => {
   return {
     type: UPDATEERROR,

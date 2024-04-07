@@ -35,13 +35,13 @@ function BackgroundChanger() {
   };
 
   return (
-    <div className="container-fluid h-100">
+    <div className="container-fluid h-100" style={{overflowY:"auto"}}>
       <div className="row h-100">
         <div className="col-6  d-flex align-items-stretch" style={leftHalfStyle}>
           <div style={redHueStyle}></div>
           {/* Content for the left half */}
         </div>
-        <div className="col-6 formholder d-flex align-items-stretch">
+        <div className="col-6 formholder d-flex align-items-stretch" >
          <Provider store={store}> 
           <Top/>
           <Forms />
