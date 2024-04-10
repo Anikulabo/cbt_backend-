@@ -124,7 +124,7 @@ export const itemreducer = (state = initialState, action) => {
           password1: name,
         };
       }
-      if (type === "username") {
+      if (type === "UserName") {
         return {
           ...state,
           biodata: { ...state.biodata, username: name, image: name },
@@ -146,7 +146,7 @@ export const itemreducer = (state = initialState, action) => {
           };
         }
       }
-      if (type === "department") {
+      if (type === "Department") {
         return {
           ...state,
           biodata: { ...state.biodata, department: name },

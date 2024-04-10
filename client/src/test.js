@@ -3,6 +3,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { Welcome, Main } from "./components";
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import backgroundImage from "./unaab.jpeg";
 import { changenum, shownav, updateAnswered } from "./action";
 function Test(props) {
   let num = useSelector((state) => state.items.number);
@@ -50,7 +51,18 @@ function Test(props) {
   };
 
   return (
-    <div className="All">
+    <div
+      className="All"
+      style={{
+        position: "relative",
+        backgroundColor: "rgba(255, 255, 255, 0.5)",
+        backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.9)),url(${backgroundImage})`, 
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "25%",
+        backgroundPosition: "center",
+        backgroundAttachment:"fixed"
+      }}
+    >
       <Welcome />
       <Main
         question={props.questions[num]}

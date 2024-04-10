@@ -27,7 +27,7 @@ export const Option = ({ options, no, save, answer }) => {
                 save(event);
               }}
             />
-            {option}
+            <span style={{marginLeft:"15px"}}>{option}</span>
             <br />
           </span>
         );

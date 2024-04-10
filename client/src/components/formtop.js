@@ -1,5 +1,5 @@
 import "./top.css";
-export const Top = () => {
+export const Top = ({content}) => {
   return (
     <h3
       style={{
@@ -13,7 +13,7 @@ export const Top = () => {
         fontWeight: "bolder",
       }}
     >
-      Sign up
+      {content}
     </h3>
   );
 };

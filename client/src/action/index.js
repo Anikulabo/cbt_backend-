@@ -63,7 +63,7 @@ export const destroy = () => {
     payload: "",
   };
 };
-export const upload=(image,shownimage)=>{
+export const handleUploadPhoto=(image,shownimage)=>{
   return{
     type:UPLOADIMAGE,
     payload:{image,shownimage},

@@ -4,4 +4,7 @@ import { Main } from "./maincontent";
 import { Forms } from "./form";
 import { Rightbottom } from "./formbottom";
 import { Top } from "./formtop";
-export {Welcome,Main,Forms,Rightbottom,Top};
+import { Inputpassword } from './inputpassword';
+import { Textinput } from './inputtext';
+import { Button } from './Button';
+export {Welcome,Main,Forms,Rightbottom,Top,Inputpassword,Textinput,Button};
