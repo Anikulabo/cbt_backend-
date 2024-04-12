@@ -41,7 +41,7 @@ function BackgroundChanger() {
   const datas = useSelector((state) => state.items.biodata);
   const error = useSelector((state) => state.items.error);
   let img = useSelector((state) => state.items.img);
-  let small = useSelector((state) => state.items.warning);
+  let small = useSelector((state) => state.items.warning.signup);
   let pass1 = useSelector((state) => state.items.password1);
   let pass2 = useSelector((state) => state.items.password2);
   let password1 = useSelector((state) => state.items.type1);
@@ -83,7 +83,8 @@ function BackgroundChanger() {
     if (nodata.length >= 1) {
       updatemessagef(
         "warning",
-        "you.ve to fill in your " + nodata + " before you can register"
+        "you.ve to fill in your " + nodata + " before you can register",
+        "signup"
       );
     } else {
       formdata.append("username", datas.username);
@@ -98,9 +99,10 @@ function BackgroundChanger() {
         console.log("Success:", response.data);
       } catch (error) {
         if (error.response.status >= 500) {
+          console.log(error)
           updatemessagef(
             "warning",
-            "there is a server error or the user is not unique"
+            error
           );
         }
       }
@@ -194,18 +196,27 @@ function BackgroundChanger() {
               content="Upload a photo"
               class="fa fa-upload"
               action={upload}
-              position="0"
+              style={{
+                position: "relative",
+                left: "0",
+              }}
             />
             <Button
               content="Take a photo"
               class="fa fa-camera"
-              position="50%"
+              style={{
+                position: "relative",
+                left: "50%",
+              }}
             />
             <Button
               content="Register"
               class="fa fa-paper-plane"
               action={save}
-              position="90%"
+              style={{
+                position: "relative",
+                left: "90%",
+              }}
             />
           </Rightbottom>
         </div>

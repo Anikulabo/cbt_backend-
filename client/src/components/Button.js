@@ -3,7 +3,7 @@ export const Button = (props) => {
   return (
     <button
       className="text-light bg-lemon formb"
-      style={{ position: "relative", left: props.position, display: "flex", alignItems: "center" }}
+      style={props.style}
       onClick={(event) => {
         if(props.action){
             props.action(event);    

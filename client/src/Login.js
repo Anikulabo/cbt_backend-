@@ -4,22 +4,34 @@ import {
   Top,
   Inputpassword,
   Textinput,
-  Button
+  Button,
 } from "./components";
 import React, { useState, useEffect } from "react";
 import { Provider } from "react-redux";
 import { rootReducer } from "./reducer";
 import { createStore } from "redux";
+import { useSelector, useDispatch } from "react-redux";
+import { changeType, changeVariable, hideIcon, updatemessage } from "./action";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./components/top.css";
 import exam4 from "./components/img/exam4.jpg";
 import exam5 from "./components/img/exam5.jpg";
 import exam6 from "./components/img/exam6.jpg";
 import exam7 from "./components/img/exam7.jpg";
+import axios from "axios";
 export const store = createStore(rootReducer);
 function Login() {
   const [index, setIndex] = useState(0);
-  const images = [exam4, exam5, exam6,exam7];
+  const images = [exam4, exam5, exam6, exam7];
+  const dispatch = useDispatch();
+  const datas = useSelector((state) => state.items.biodata);
+  const eyeicon = useSelector((state) => state.items.eyeicon1);
+  const password = useSelector((state) => state.items.type1);
+  const warning = useSelector((state) => state.items.warning.login);
+  const error = useSelector((state) => state.items.error);
+  const changeVariablef = (name, type) => dispatch(changeVariable(name, type));
+  const hideIconf = (where, length) => dispatch(hideIcon(where, length));
+  const changeTypef = (which) => dispatch(changeType(which));
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((prevIndex) => (prevIndex + 1) % images.length);
@@ -41,48 +53,67 @@ function Login() {
     width: "100%",
     height: "100vh",
   };
-
+  const handleLogin = async (event) => {
+    if (datas.password.length > 0 && datas.username.length > 0) {
+      const username = datas.username;
+      const password = datas.password;
+      try {
+        const response = await axios.post("http://localhost:5000/login", {
+          username,
+          password,
+        });
+        console.log("Login successful");
+      } catch (error) {
+        console.error("Error logging in:", error);
+      }
+    } else {
+      updatemessage("warning", "input your username and password","login");
+    }
+  };
   return (
     <div className="container-fluid h-100" style={{ overflowY: "auto" }}>
       <div className="row h-100">
-        <div className="col-5 d-flex align-items-stretch" style={leftHalfStyle}>
+        <div className="col-6 d-flex align-items-stretch" style={leftHalfStyle}>
           <div style={redHueStyle}></div>
           {/* Content for the left half */}
         </div>
-        <div className="col-7 formholder d-flex align-items-stretch">
+        <div className="col-6 formholder d-flex align-items-stretch">
           <Provider store={store}>
             <Top content={"Log in"} />
-            <Forms>
+            <Forms small={warning} error={error}>
               <Textinput
                 variable={"UserName"}
-                //data={datas.username}
+                data={datas.username}
                 placeholder={"enter your Username"}
-                //actions={{ changeVariable: changeVariablef }}
+                actions={{ changeVariable: changeVariablef }}
               />
               <Inputpassword
                 variable={"Password"}
-                //type={password2}
+                type={password}
                 placeholder={"type your password"}
-                // value={pass2}
-                // eyeicon={eyeicon2}
-                // control={"password2"}
-                // iconcontrolled={2}
-                // actions={{
-                //   changeVariable: changeVariablef,
-                //   hideIcon: hideIconf,
-                //   changeType: changeTypef,
-                // }}
+                value={datas.password}
+                eyeicon={eyeicon}
+                control={"password"}
+                iconcontrolled={1}
+                actions={{
+                  changeVariable: changeVariablef,
+                  hideIcon: hideIconf,
+                  changeType: changeTypef,
+                }}
               />
             </Forms>
             <Rightbottom>
-              <Rightbottom>
-                <Button
-                  content="Login"
-                   class="fas fa-sign-in-alt"
-                  // action={save}
-                  position="690%"
-                />
-              </Rightbottom>
+              <Button
+                content="Login"
+                class="fas fa-sign-in-alt"
+                style={{
+                  position: "relative",
+                  left: "590%",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+                action={handleLogin}
+              />
             </Rightbottom>
           </Provider>
         </div>

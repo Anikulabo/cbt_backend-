@@ -7,4 +7,4 @@ export const CHANGE_TYPE='CHANGE_TYPE';
 export const HIDEICON='HIDEICON';
 export const UPDATEERROR="UPDATEERROR";
 export const DESTROY="DESTROY";
-export const UPLOADIMAGE="UPLOADIMAGE"
+export const UPLOADIMAGE="UPLOADIMAGE";

@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database.js");
+const bcrypt = require('bcrypt');
 const User = sequelize.define(
   "Users",
   {
@@ -35,6 +36,13 @@ const User = sequelize.define(
     // Other model options
     tableName: "Users", // Name of the table in the database
     timestamps: false 
+  }, {
+    hooks: {
+      beforeCreate: async (user) => {
+        const hashedPassword = await bcrypt.hash(user.password, 10);
+        user.password = hashedPassword;
+      }
+    }
   }
 );
 

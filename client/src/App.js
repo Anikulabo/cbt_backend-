@@ -15,7 +15,14 @@ function App() {
     <Router>
       <div>
         <Routes>
-          <Route path="/" element={<Login />} />
+          <Route
+            path="/"
+            element={
+              <Provider store={store}>
+                <Login />
+              </Provider>
+            }
+          />
           <Route
             path="/registration"
             element={

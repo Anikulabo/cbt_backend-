@@ -5,9 +5,13 @@ const { promisify } = require('util');
 const writeFileAsync = promisify(fs.writeFile);
 exports.createUser = async (req, res) => {
   try {
-    const { username, password,  department } = req.body;
+    const { username, password, department } = req.body;
+    // Check if the username already exists in the database
+    const existingUser = await User.findOne({ where: { username } });
+    if (existingUser) {
+      return res.status(400).json({ error: 'Username already taken' });
+    }
     let user = { username, password, department };
-
     // Check if an image was uploaded
     if (req.file) {
       const imageData = req.file.buffer; // Access file data from req.file.buffer

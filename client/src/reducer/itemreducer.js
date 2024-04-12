@@ -21,7 +21,7 @@ const initialState = {
   eyeicon2: false,
   type1: true,
   type2: true,
-  warning: true,
+  warning: {signup:true,login:true},
   successmessage: "",
   error: "both passwords must be equal before you can register",
   img:"",
@@ -52,6 +52,8 @@ export const itemreducer = (state = initialState, action) => {
         eyeicon1: false,
         eyeicon2: false,
         img:"",
+        type1:true,
+        type2:true,
         biodata: {
           username: "",
           password: "",
@@ -61,21 +63,10 @@ export const itemreducer = (state = initialState, action) => {
         },
       };
     case UPDATEERROR:
-      const { part, message } = action.payload;
-      if (part === "warning") {
-        return {
-          ...state,
-          warning: true,
-          error: message,
-        };
-      }
-      if (part === "success") {
-        return {
-          ...state,
-          warning: false,
-          successmessage: message,
-        };
-      }
+      let { part, message,from } = action.payload;
+          if(part==="warning"){
+            alert(message)
+          }      
     case HIDEICON:
       const { where, length } = action.payload;
       if (where === 1 && length >= 1) {
@@ -135,14 +126,14 @@ export const itemreducer = (state = initialState, action) => {
           return{
             ...state,
             password2:name,
-            warning:false,
+            warning:{...state.warning,signup:false},
             biodata:{...state.biodata,password:name}
           }
         }else{
           return {
             ...state,
             password2: name,
-            warning:true
+            warning:{...state.warning,signup:true},
           };
         }
       }
@@ -151,6 +142,11 @@ export const itemreducer = (state = initialState, action) => {
           ...state,
           biodata: { ...state.biodata, department: name },
         };
+      }
+      if(type==="password"){
+        return{
+          ...state,biodata:{...state.biodata,password:name}
+        }
       }
     case NAV:
       return {
