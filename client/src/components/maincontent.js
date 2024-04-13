@@ -1,10 +1,24 @@
 import "./top.css";
-import avatar1 from "./img/Avatart1.jpg";
 import { Option } from "./option";
 import { CameraComponent } from "./lifefeed";
 import { Bottom } from "./subbottom";
 import { Easynavigator } from "./Navtab";
-export const Main = ({ question, number, actions, bottombtn,nav,displayctrl,answers }) => {
+import { useEffect,useState } from "react";
+export const Main = ({ question, number, actions, bottombtn,nav,displayctrl,answers,user }) => {
+  const [avatarSrc, setAvatarSrc] = useState(null);
+  useEffect(() => {
+    const fetchAvatar = async () => {
+      try {
+        // Dynamically import avatar based on user's username
+        const avatar = await import("./img/"+user.username+".jpg").catch(() => import("./img/Avatart1.jpg"));
+        setAvatarSrc(avatar.default);
+      } catch (error) {
+        console.error('Error fetching avatar:', error);
+      }
+    };
+
+    fetchAvatar();
+  }, [user.username]);
   return (
     <div className="container-fluid">
       <div className="row">
@@ -42,7 +56,7 @@ export const Main = ({ question, number, actions, bottombtn,nav,displayctrl,answ
           </button>
           <div className="user bg-lemon text-light">
             <img
-              src={avatar1}
+              src={avatarSrc}
               alt="it should show an avatar"
               height="50%"
               width="50%"
@@ -53,8 +67,8 @@ export const Main = ({ question, number, actions, bottombtn,nav,displayctrl,answ
               }}
               className="mt-3"
             />
-            <div style={{ fontWeight: "bolder" }}>Olamide Bello</div>
-            <div style={{ marginBottom: "15px" }}>Bello22@gmail.com</div>
+            <div style={{ fontWeight: "bolder" }}>{user.username}</div>
+            <div style={{ marginBottom: "15px" }}>{user.username+"22@gmail.com"}</div>
           </div>
         </div>
         <div className="col-md-10">

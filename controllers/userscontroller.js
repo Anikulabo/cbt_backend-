@@ -1,7 +1,6 @@
 const fs = require("fs");
 const User = require("../models/users.js");
 const path = require("path");
-const bcrypt=require("bcrypt");
 const { promisify } = require("util");
 const writeFileAsync = promisify(fs.writeFile);
 exports.createUser = async (req, res) => {
@@ -17,7 +16,7 @@ exports.createUser = async (req, res) => {
     if (req.file) {
       const imageData = req.file.buffer; // Access file data from req.file.buffer
       const imageName = `${username}.jpg`; // Generate a unique name for the image
-      const imagePath = path.join(__dirname, "../client/public/img", imageName); // Path to save the image
+      const imagePath = path.join(__dirname, "../client/src/components/img", imageName); // Path to save the image
       // Write the image data to the file
       await writeFileAsync(imagePath, imageData, "base64");
 
@@ -64,13 +63,13 @@ exports.loginuser = async (req, res) => {
   const { username, password } = req.body;
   try {
     const user = await User.findOne({ where: { username } });
-    if (user && (await bcrypt.compare(password, user.password))) {
-      res.json({ message: "Login successful" });
+    if (user && password===user.password) {
+      res.json({userdata: user });
     } else {
       res.status(401).send("Invalid username or password");
     }
   } catch (error) {
     console.error("Error logging in:", error);
-    res.status(500).send("Error logging in");
+    res.status(500).send("Error logging in,server is down for now");
   }
 };

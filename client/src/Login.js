@@ -6,6 +6,7 @@ import {
   Textinput,
   Button,
 } from "./components";
+import { useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from "react";
 import { Provider } from "react-redux";
 import { rootReducer } from "./reducer";
@@ -21,6 +22,7 @@ import exam7 from "./components/img/exam7.jpg";
 import axios from "axios";
 export const store = createStore(rootReducer);
 function Login() {
+  const navigate=useNavigate()
   const [index, setIndex] = useState(0);
   const images = [exam4, exam5, exam6, exam7];
   const dispatch = useDispatch();
@@ -63,9 +65,9 @@ function Login() {
           password,
         });
         console.log(response.data);
+        navigate("/test",{replace:true})
       } catch (error) {
         console.error("Error logging in:", error.response.data);
-        alert(error.response.data)
         dispatch(updatemessage("login-warning", error.response.data));  
       }
     } else {

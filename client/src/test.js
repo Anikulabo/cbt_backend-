@@ -9,6 +9,7 @@ function Test(props) {
   let num = useSelector((state) => state.items.number);
   let tabledisplay = useSelector((state) => state.items.showtable);
   let answered = useSelector((state) => state.items.answered);
+  let data=useSelector((state)=>state.items.biodata)
   const [btndisplay, setBtndisplay] = useState({
     next: "block",
     previous: "none",
@@ -72,6 +73,7 @@ function Test(props) {
         nav={tabledisplay}
         displayctrl={shide}
         answers={answered}
+        user={data}
       />
     </div>
   );
