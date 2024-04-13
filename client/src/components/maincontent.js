@@ -13,6 +13,8 @@ export const Main = ({
   displayctrl,
   answers,
   user,
+  camerastatus,
+  message,
 }) => {
   const [avatarSrc, setAvatarSrc] = useState(null);
   useEffect(() => {
@@ -139,7 +141,23 @@ export const Main = ({
                   />
                 </div>
                 <div className="col-md-4 d-flex justify-content-center">
-                  <CameraComponent />
+                  <CameraComponent action={actions.camera} />
+                  <div
+                    style={{
+                      marginTop: "200px",
+                      marginLeft: "-250px",
+                      fontWeight: "bolder",
+                    }}
+                  >
+                    Status :{" "}
+                    <span
+                      style={{
+                        color: camerastatus ? "red" : "rgb(81, 194, 37)",
+                      }}
+                    >
+                      {message}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

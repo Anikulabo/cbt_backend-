@@ -1,6 +1,6 @@
 import './top.css'
 import React, { useRef, useEffect } from "react";
-export const CameraComponent = () => {
+export const CameraComponent = (props) => {
     const videoRef = useRef(null);
 
     useEffect(() => {
@@ -12,6 +12,7 @@ export const CameraComponent = () => {
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
           }
+          props.checkBrightness(stream);
         } catch (err) {
           console.error("Error accessing camera:", err);
         }
@@ -32,6 +33,8 @@ export const CameraComponent = () => {
       };
     }, []);
 
+    ;
+    
     return (
       <div className="mt-3">
         <video
@@ -46,7 +49,7 @@ export const CameraComponent = () => {
             borderRadius:"10px",
             border:"1px solid rgb(81, 194, 37)"
           }}
-        />
+        /><br/>
       </div>
     );
 };

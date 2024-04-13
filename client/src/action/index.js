@@ -7,7 +7,7 @@ import {
   CHANGE_TYPE,
   UPDATEERROR,
   DESTROY,
-  UPLOADIMAGE
+  UPLOADIMAGE,
 } from "./type";
 export const changenum = (number, operator, total) => {
   let newItem;

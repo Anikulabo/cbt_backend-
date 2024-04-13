@@ -4,12 +4,14 @@ import { Welcome, Main } from "./components";
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import backgroundImage from "./unaab.jpeg";
-import { changenum, shownav, updateAnswered } from "./action";
+import { changenum, shownav, updateAnswered, updatemessage } from "./action";
 function Test(props) {
   let num = useSelector((state) => state.items.number);
   let tabledisplay = useSelector((state) => state.items.showtable);
   let answered = useSelector((state) => state.items.answered);
-  let data=useSelector((state)=>state.items.biodata)
+  let data = useSelector((state) => state.items.biodata);
+  let message = useSelector((state) => state.items.camerastatus.message);
+  let status = useSelector((state) => state.items.camerastatus.status);
   const [btndisplay, setBtndisplay] = useState({
     next: "block",
     previous: "none",
@@ -28,6 +30,45 @@ function Test(props) {
     }
   }, [num, props.questions.length]);
   let dispatch = useDispatch();
+  const calculateBrightness = (imageBitmap) => {
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+    canvas.width = imageBitmap.width;
+    canvas.height = imageBitmap.height;
+    context.drawImage(imageBitmap, 0, 0);
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    let brightness = 0;
+    for (let i = 0; i < imageData.data.length; i += 4) {
+      brightness +=
+        (imageData.data[i] + imageData.data[i + 1] + imageData.data[i + 2]) / 3;
+    }
+    return brightness / (imageData.data.length / 4);
+  };
+  const checkBrightness = (stream) => {
+    const videoTrack = stream.getVideoTracks()[0];
+    const imageCapture = new ImageCapture(videoTrack);
+
+    const check = async () => {
+      try {
+        const imageBitmap = await imageCapture.grabFrame();
+        const brightness = calculateBrightness(imageBitmap);
+        if (brightness < 100) {
+          dispatch(
+            updatemessage("camerafailure", "Room is not bright enough!")
+          );
+        } else {
+          dispatch(
+            updatemessage("camerasuccess", "we're can now see you clearly")
+          );
+        }
+        setTimeout(check, 1000); // Check brightness every second
+      } catch (error) {
+        console.error("Error grabbing frame:", error);
+      }
+    };
+
+    check();
+  };
   const move = (event) => {
     if (!isNaN(event.target.innerHTML)) {
       dispatch(changenum(num, event.target.innerHTML, props.questions.length));
@@ -57,23 +98,25 @@ function Test(props) {
       style={{
         position: "relative",
         backgroundColor: "rgba(255, 255, 255, 0.5)",
-        backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.9)),url(${backgroundImage})`, 
+        backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.9)),url(${backgroundImage})`,
         backgroundRepeat: "no-repeat",
         backgroundSize: "25%",
         backgroundPosition: "center",
-        backgroundAttachment:"fixed"
+        backgroundAttachment: "fixed",
       }}
     >
       <Welcome />
       <Main
         question={props.questions[num]}
         number={num}
-        actions={{ move: move, save: save }}
+        actions={{ move: move, save: save, camera: checkBrightness }}
         bottombtn={btndisplay}
         nav={tabledisplay}
         displayctrl={shide}
         answers={answered}
         user={data}
+        camerastatus={status}
+        message={message}
       />
     </div>
   );
