@@ -69,9 +69,9 @@ export const handleUploadPhoto=(image,shownimage)=>{
     payload:{image,shownimage},
   }
 }
-export const updatemessage = (part, message,from) => {
+export const updatemessage = (part, message) => {
   return {
     type: UPDATEERROR,
-    payload: { part, message,from },
+    payload: { part, message},
   };
 };

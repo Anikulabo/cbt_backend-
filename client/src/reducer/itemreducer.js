@@ -7,7 +7,7 @@ import {
   HIDEICON,
   UPDATEERROR,
   DESTROY,
-  UPLOADIMAGE
+  UPLOADIMAGE,
 } from "../action/type";
 const initialState = {
   number: 0,
@@ -21,10 +21,10 @@ const initialState = {
   eyeicon2: false,
   type1: true,
   type2: true,
-  warning: {signup:true,login:true},
+  warning: { signup: true, login: false },
   successmessage: "",
   error: "both passwords must be equal before you can register",
-  img:"",
+  img: "",
   biodata: { username: "", password: "", department: "", image: "", score: 0 },
   password1: "",
   password2: "",
@@ -38,22 +38,22 @@ export const itemreducer = (state = initialState, action) => {
         number: action.payload,
       };
     case UPLOADIMAGE:
-    const {image,shownimage}=action.payload;  
-    return{
+      const { image, shownimage } = action.payload;
+      return {
         ...state,
-        img:shownimage,
-        biodata:{...state.biodata,image:image}
-      }  
+        img: shownimage,
+        biodata: { ...state.biodata, image: image },
+      };
     case DESTROY:
       return {
         ...state,
-        password1:"",
-        password2:"",
+        password1: "",
+        password2: "",
         eyeicon1: false,
         eyeicon2: false,
-        img:"",
-        type1:true,
-        type2:true,
+        img: "",
+        type1: true,
+        type2: true,
         biodata: {
           username: "",
           password: "",
@@ -63,10 +63,21 @@ export const itemreducer = (state = initialState, action) => {
         },
       };
     case UPDATEERROR:
-      let { part, message,from } = action.payload;
-          if(part==="warning"){
-            alert(message)
-          }      
+      let { part, message } = action.payload;
+      if (part === "signup-warning") {
+        return {
+          ...state,
+          error: message,
+          warning: { ...state.warning, signup: true },
+        };
+      }
+      if (part === "login-warning") {
+        return {
+          ...state,
+          error: message,
+          warning: { ...state.warning, login: true },
+        };
+      }
     case HIDEICON:
       const { where, length } = action.payload;
       if (where === 1 && length >= 1) {
@@ -122,18 +133,18 @@ export const itemreducer = (state = initialState, action) => {
         };
       }
       if (type === "password2") {
-        if(name===state.password1){
-          return{
-            ...state,
-            password2:name,
-            warning:{...state.warning,signup:false},
-            biodata:{...state.biodata,password:name}
-          }
-        }else{
+        if (name === state.password1) {
           return {
             ...state,
             password2: name,
-            warning:{...state.warning,signup:true},
+            warning: { ...state.warning, signup: false },
+            biodata: { ...state.biodata, password: name },
+          };
+        } else {
+          return {
+            ...state,
+            password2: name,
+            warning: { ...state.warning, signup: true },
           };
         }
       }
@@ -143,10 +154,11 @@ export const itemreducer = (state = initialState, action) => {
           biodata: { ...state.biodata, department: name },
         };
       }
-      if(type==="password"){
-        return{
-          ...state,biodata:{...state.biodata,password:name}
-        }
+      if (type === "password") {
+        return {
+          ...state,
+          biodata: { ...state.biodata, password: name },
+        };
       }
     case NAV:
       return {

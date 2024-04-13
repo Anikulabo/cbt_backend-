@@ -7,7 +7,8 @@ const {
   createUser,
   getUsers,
   updateUser,
-  deleteUser
+  deleteUser,
+  loginuser
 } = require('./controllers/userscontroller.js');
 const app = express();
 app.use(express.json());
@@ -22,6 +23,7 @@ app.put('/api/users/:id',updateUser);
 app.delete('/api/users/:id',deleteUser);
 app.post('/api/questions',createQuestion);
 app.put('/api/questions/:id',updateQuestion)
+app.post("/api/login",loginuser)
 app.listen(3001, () => {
   console.log("Server listening in http://localhost:3001");
 });

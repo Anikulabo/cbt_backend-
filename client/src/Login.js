@@ -58,16 +58,18 @@ function Login() {
       const username = datas.username;
       const password = datas.password;
       try {
-        const response = await axios.post("http://localhost:5000/login", {
+        const response = await axios.post("http://localhost:3001/api/login", {
           username,
           password,
         });
-        console.log("Login successful");
+        console.log(response.data);
       } catch (error) {
-        console.error("Error logging in:", error);
+        console.error("Error logging in:", error.response.data);
+        alert(error.response.data)
+        dispatch(updatemessage("login-warning", error.response.data));  
       }
     } else {
-      updatemessage("warning", "input your username and password","login");
+      dispatch(updatemessage("login-warning", "input your username and password"));
     }
   };
   return (

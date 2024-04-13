@@ -82,9 +82,8 @@ function BackgroundChanger() {
     }
     if (nodata.length >= 1) {
       updatemessagef(
-        "warning",
-        "you.ve to fill in your " + nodata + " before you can register",
-        "signup"
+        "signup-warning",
+        "you.ve to fill in your " + nodata + " before you can register"
       );
     } else {
       formdata.append("username", datas.username);
