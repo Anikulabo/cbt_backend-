@@ -3,17 +3,28 @@ import { Option } from "./option";
 import { CameraComponent } from "./lifefeed";
 import { Bottom } from "./subbottom";
 import { Easynavigator } from "./Navtab";
-import { useEffect,useState } from "react";
-export const Main = ({ question, number, actions, bottombtn,nav,displayctrl,answers,user }) => {
+import { useEffect, useState } from "react";
+export const Main = ({
+  question,
+  number,
+  actions,
+  bottombtn,
+  nav,
+  displayctrl,
+  answers,
+  user,
+}) => {
   const [avatarSrc, setAvatarSrc] = useState(null);
   useEffect(() => {
     const fetchAvatar = async () => {
       try {
         // Dynamically import avatar based on user's username
-        const avatar = await import("./img/"+user.username+".jpg").catch(() => import("./img/Avatart1.jpg"));
+        const avatar = await import("./img/" + user.username + ".jpg").catch(
+          () => import("./img/Avatart1.jpg")
+        );
         setAvatarSrc(avatar.default);
       } catch (error) {
-        console.error('Error fetching avatar:', error);
+        console.error("Error fetching avatar:", error);
       }
     };
 
@@ -67,8 +78,12 @@ export const Main = ({ question, number, actions, bottombtn,nav,displayctrl,answ
               }}
               className="mt-3"
             />
-            <div style={{ fontWeight: "bolder" }}>{user.username}</div>
-            <div style={{ marginBottom: "15px" }}>{user.username+"22@gmail.com"}</div>
+            <div style={{ fontWeight: "bolder", textTransform: "capitalize" }}>
+              {user.username}
+            </div>
+            <div style={{ marginBottom: "15px", textTransform: "capitalize" }}>
+              {user.username + "22@gmail.com"}
+            </div>
           </div>
         </div>
         <div className="col-md-10">
@@ -103,8 +118,18 @@ export const Main = ({ question, number, actions, bottombtn,nav,displayctrl,answ
                     {"Question " + (number + 1)}
                   </div>
                   <div>{question.question}</div>
-                  <Option options={question.options} no={question.id} save={actions.save} answer={answers}/>
-                   <Easynavigator num={number} show={nav} answered={answers} action={actions.move}/>
+                  <Option
+                    options={question.options}
+                    no={question.id}
+                    save={actions.save}
+                    answer={answers}
+                  />
+                  <Easynavigator
+                    num={number}
+                    show={nav}
+                    answered={answers}
+                    action={actions.move}
+                  />
                   {/* Bottom component */}
                   <Bottom
                     number={number}

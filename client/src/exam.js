@@ -95,13 +95,15 @@ function BackgroundChanger() {
           "http://localhost:3001/api/users",
           formdata
         );
-        console.log("Success:", response.data);
+        destroyf();
+        console.log("Success:", response.data.message);
+        alert(response.data.message)
       } catch (error) {
-        if (error.response.status >= 500) {
-          console.log(error)
+        if (error.response.status >= 400) {
+          console.log(error.response.data.error)
           updatemessagef(
-            "warning",
-            error
+            "signup-warning",
+            error.response.data.error
           );
         }
       }
