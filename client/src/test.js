@@ -10,8 +10,6 @@ function Test(props) {
   let tabledisplay = useSelector((state) => state.items.showtable);
   let answered = useSelector((state) => state.items.answered);
   let data = useSelector((state) => state.items.biodata);
-  let message = useSelector((state) => state.items.camerastatus.message);
-  let status = useSelector((state) => state.items.camerastatus.status);
   const [btndisplay, setBtndisplay] = useState({
     next: "block",
     previous: "none",
@@ -115,8 +113,6 @@ function Test(props) {
         displayctrl={shide}
         answers={answered}
         user={data}
-        camerastatus={status}
-        message={message}
       />
     </div>
   );

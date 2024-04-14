@@ -29,7 +29,6 @@ const initialState = {
   biodata: { username: "", password: "", department: "", image: "", score: 0 },
   password1: "",
   password2: "",
-  camerastatus: {status:false,message:"your camera status comes here"},
 };
 
 export const itemreducer = (state = initialState, action) => {
@@ -78,18 +77,6 @@ export const itemreducer = (state = initialState, action) => {
           ...state,
           error: message,
           warning: { ...state.warning, login: true },
-        };
-      }
-      if (part === "camerasuccess") {
-        return {
-          ...state,
-          camerastatus: {status:false,message:message},
-        };
-      }
-      if(part==="camerafailure"){
-        return {
-          ...state,
-          camerastatus: {status:true,message:message},
         };
       }
     case HIDEICON:
