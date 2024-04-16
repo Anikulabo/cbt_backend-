@@ -5,6 +5,7 @@ import { createStore } from "redux";
 import BackgroundChanger from "./exam";
 import Test from "./test";
 import Login from "./Login";
+import { Admin } from "./admin";
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
 
 // Create Redux store
@@ -37,6 +38,14 @@ function App() {
             element={
               <Provider store={store}>
                 <Test questions={QuizData} />
+              </Provider>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <Provider store={store}>
+                <Admin />
               </Provider>
             }
           />

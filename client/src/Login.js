@@ -64,8 +64,13 @@ function Login() {
           username,
           password,
         });
-        console.log(response.data);
+        console.log(response.data.userdata.department);
+       if(response.data.userdata.department!=="admin"){
         navigate("/test",{replace:true})
+       } 
+        else{
+          navigate("/admin",{replace:true})
+        }
       } catch (error) {
         console.error("Error logging in:", error.response.data);
         dispatch(updatemessage("login-warning", error.response.data));  

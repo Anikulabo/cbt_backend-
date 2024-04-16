@@ -10,7 +10,6 @@ export const CameraComponent = (props) => {
   });
   useEffect(() => {
     const constraints = { video: true };
-
     const startCamera = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia(constraints);

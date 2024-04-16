@@ -4,7 +4,7 @@ import { Welcome, Main } from "./components";
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import backgroundImage from "./unaab.jpeg";
-import { changenum, shownav, updateAnswered, updatemessage } from "./action";
+import { changenum, shownav, updateAnswered} from "./action";
 function Test(props) {
   let num = useSelector((state) => state.items.number);
   let tabledisplay = useSelector((state) => state.items.showtable);
@@ -28,45 +28,6 @@ function Test(props) {
     }
   }, [num, props.questions.length]);
   let dispatch = useDispatch();
-  const calculateBrightness = (imageBitmap) => {
-    const canvas = document.createElement("canvas");
-    const context = canvas.getContext("2d");
-    canvas.width = imageBitmap.width;
-    canvas.height = imageBitmap.height;
-    context.drawImage(imageBitmap, 0, 0);
-    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-    let brightness = 0;
-    for (let i = 0; i < imageData.data.length; i += 4) {
-      brightness +=
-        (imageData.data[i] + imageData.data[i + 1] + imageData.data[i + 2]) / 3;
-    }
-    return brightness / (imageData.data.length / 4);
-  };
-  const checkBrightness = (stream) => {
-    const videoTrack = stream.getVideoTracks()[0];
-    const imageCapture = new ImageCapture(videoTrack);
-
-    const check = async () => {
-      try {
-        const imageBitmap = await imageCapture.grabFrame();
-        const brightness = calculateBrightness(imageBitmap);
-        if (brightness < 100) {
-          dispatch(
-            updatemessage("camerafailure", "Room is not bright enough!")
-          );
-        } else {
-          dispatch(
-            updatemessage("camerasuccess", "we're can now see you clearly")
-          );
-        }
-        setTimeout(check, 1000); // Check brightness every second
-      } catch (error) {
-        console.error("Error grabbing frame:", error);
-      }
-    };
-
-    check();
-  };
   const move = (event) => {
     if (!isNaN(event.target.innerHTML)) {
       dispatch(changenum(num, event.target.innerHTML, props.questions.length));
@@ -107,7 +68,7 @@ function Test(props) {
       <Main
         question={props.questions[num]}
         number={num}
-        actions={{ move: move, save: save, camera: checkBrightness }}
+        actions={{ move: move, save: save }}
         bottombtn={btndisplay}
         nav={tabledisplay}
         displayctrl={shide}
