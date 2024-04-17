@@ -1,6 +1,9 @@
 import React from "react";
 import unaabImage from "./unaab.jpeg"; // Importing the image
+import { Adminwelcome } from "./components";
+import { useSelector } from "react-redux";
 export const Admin = () => {
+  const name=useSelector((state)=>state.items.biodata.username)
   return (
     <div className="container-fluid">
       <div className="row">
@@ -18,7 +21,6 @@ export const Admin = () => {
                 maxWidth: "15%",
                 marginTop: "5px",
                 borderRadius: "50%",
-                fff,
               }}
             />
             <span style={{ marginLeft: "15px", marginTop: "15px" }}>
@@ -27,14 +29,7 @@ export const Admin = () => {
           </div>
         </div>
         <div className="col-9" style={{ minHeight: "100vh" }}>
-          <div className="row" style={{ position: "absolute", top: "10px" }}>
-            <div className="col-9 text-dark" style={{ fontWeight: "bolder" }}>
-              Dashboard
-            </div>
-            <div className="col-3">
-              <i className="fa fa-bel"></i>
-            </div>
-          </div>
+          <Adminwelcome name={name}/>
         </div>
       </div>
     </div>

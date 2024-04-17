@@ -7,4 +7,5 @@ import { Top } from "./formtop";
 import { Inputpassword } from './inputpassword';
 import { Textinput } from './inputtext';
 import { Button } from './Button';
-export {Welcome,Main,Forms,Rightbottom,Top,Inputpassword,Textinput,Button};
+import { Adminwelcome } from './adminwelcome';
+export {Welcome,Main,Forms,Rightbottom,Top,Inputpassword,Textinput,Button,Adminwelcome};

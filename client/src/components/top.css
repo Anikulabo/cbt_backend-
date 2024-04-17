@@ -9,6 +9,15 @@
   margin-top: 15px;
   width: 200px;
 }
+.transparent-div {
+  background-color: rgba(255, 255, 255, 0.5); /* White color with 50% opacity */
+  padding: 20px;
+  border-radius: 5px;
+}
+.vertical-line {
+  border-left: 1px solid black; /* Adjust the color and thickness as needed */
+  height: 100px; /* Adjust the height of the vertical line */
+}
 .formb{
 display: inline-block;
 padding: 10px;
