@@ -9,45 +9,53 @@
   margin-top: 15px;
   width: 200px;
 }
+.transparent-red {
+  background-color: rgba(240, 162, 162, 0.555); /* Red color with 50% opacity */
+}
+.transparent-blue {
+  background-color: rgba(0, 0, 255, 0.473); /* Blue color with 50% opacity */
+}
+.transparent-green {
+  background-color: rgba(144, 241, 144, 0.5); /* Green color with 50% opacity */
+}
 .transparent-div {
-  background-color: rgba(255, 255, 255, 0.5); /* White color with 50% opacity */
   padding: 20px;
   border-radius: 5px;
 }
 .vertical-line {
   border-left: 1px solid black; /* Adjust the color and thickness as needed */
   height: 100px; /* Adjust the height of the vertical line */
+  display: "inline-block";
+  margin-left:15px;
 }
-.formb{
-display: inline-block;
-padding: 10px;
-border-radius: 10px;
+.formb {
+  display: inline-block;
+  padding: 10px;
+  border-radius: 10px;
 }
- .data{
-    width: 100%;
-    border-top: none;
-    border-left: none;
-    border-right: none;
-    border-bottom: 1px solid black; /* Set the bottom border */
-    outline: none; /* Remove outline */
-    transition: border-bottom-color 0.3s ease; 
-  }
-  .data:focus {
-    border-bottom-color: limegreen; /* Change bottom border color on focus */
-  }
-.user{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    height: 30vh;
-    border-radius: 5px;
-    margin-top: 9rem;
-    justify-content: center;
+.data {
+  width: 100%;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: 1px solid black; /* Set the bottom border */
+  outline: none; /* Remove outline */
+  transition: border-bottom-color 0.3s ease;
+}
+.data:focus {
+  border-bottom-color: limegreen; /* Change bottom border color on focus */
+}
+.user {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 30vh;
+  border-radius: 5px;
+  margin-top: 9rem;
+  justify-content: center;
 }
 /* CSS */
 /* Hide the default radio button */
-
-
 
 input[type="radio"] + label {
   display: inline-block;
@@ -65,7 +73,7 @@ input[type="radio"]:checked + label {
 }
 @-moz-document url-prefix() {
   input[type="radio"] + label::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 50%;
     left: 50%;
@@ -79,7 +87,7 @@ input[type="radio"]:checked + label {
   .formholder {
     position: relative;
   }
-  
+
   .formholder::before {
     content: "";
     position: absolute;
@@ -88,12 +96,12 @@ input[type="radio"]:checked + label {
     transform: translate(-50%, -50%);
     width: 300px; /* Adjust the width and height of the icon */
     height: 300px;
-    background-image: url('img/unaab.jpeg');
+    background-image: url("img/unaab.jpeg");
     background-size: contain;
     background-repeat: no-repeat;
     opacity: 0.3; /* Adjust opacity if needed */
   }
-  
+
   input[type="radio"]:checked + label::before {
     display: block;
   }

@@ -41,10 +41,10 @@ export const Adminwelcome = (props) => {
                 border: "2.5px solid white",
               }}
             />
-            <span style={{marginLeft:"5px"}}>
+            <span style={{marginLeft:"5px",fontWeight:"bolder"}}>
               {props.name}
               <br />
-              Admin
+              <span>Admin</span>
             </span>
           </div>
         </div>

@@ -66,7 +66,8 @@ function Login() {
         });
         console.log(response.data.userdata.department);
        if(response.data.userdata.department!=="admin"){
-        navigate("/test",{replace:true})
+        navigate("/test"
+        ,{replace:true})
        } 
         else{
           navigate("/admin",{replace:true})
