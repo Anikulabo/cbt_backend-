@@ -21,5 +21,5 @@ export {
   Button,
   Adminwelcome,
   Admincard,
-  PieChart
+  PieChart,
 };

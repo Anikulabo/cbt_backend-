@@ -1,6 +1,6 @@
 import React from "react";
 import unaabImage from "./unaab.jpeg"; // Importing the image
-import { Adminwelcome, Admincard,PieChart } from "./components";
+import { Adminwelcome, Admincard, PieChart } from "./components";
 import { useSelector } from "react-redux";
 export const Admin = () => {
   const name = useSelector((state) => state.items.biodata.username);
@@ -54,8 +54,10 @@ export const Admin = () => {
                 number={300}
               />
             </div>
+            <div className="row">
+              <PieChart data={pieChartData} />
+            </div>
           </div>
-           <PieChart data={pieChartData}/>
         </div>
       </div>
     </div>

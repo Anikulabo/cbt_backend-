@@ -1,4 +1,5 @@
 const fs = require("fs");
+const { Sequelize } = require("sequelize");
 const User = require("../models/users.js");
 const path = require("path");
 const { promisify } = require("util");
@@ -16,7 +17,11 @@ exports.createUser = async (req, res) => {
     if (req.file) {
       const imageData = req.file.buffer; // Access file data from req.file.buffer
       const imageName = `${username}.jpg`; // Generate a unique name for the image
-      const imagePath = path.join(__dirname, "../client/src/components/img", imageName); // Path to save the image
+      const imagePath = path.join(
+        __dirname,
+        "../client/src/components/img",
+        imageName
+      ); // Path to save the image
       // Write the image data to the file
       await writeFileAsync(imagePath, imageData, "base64");
 
@@ -34,10 +39,23 @@ exports.createUser = async (req, res) => {
 };
 exports.getUsers = async (req, res) => {
   try {
-    const users = await User.findAll();
-    res.json(users);
+    // Construct the SQL query
+    let query =
+      "SELECT users.username, users.department, users.image, scores.subject, scores.status FROM users LEFT JOIN scores ON users.id = scores.user_id where users.department!='admin'";
+    // Execute the query
+    const results = await User.sequelize.query(query, {
+      type: Sequelize.QueryTypes.SELECT, // specify the query type
+    });
+
+    // Send the fetched user data back to the client as JSON
+    res.json(results);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    // Handle any errors
+    console.error("Error executing query:", error);
+    // Send an error response back to the client
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching user data." });
   }
 };
 exports.updateUser = async (req, res) => {
@@ -63,8 +81,8 @@ exports.loginuser = async (req, res) => {
   const { username, password } = req.body;
   try {
     const user = await User.findOne({ where: { username } });
-    if (user && password===user.password) {
-      res.json({userdata: user });
+    if (user && password === user.password) {
+      res.json({ userdata: user });
     } else {
       res.status(401).send("Invalid username or password");
     }

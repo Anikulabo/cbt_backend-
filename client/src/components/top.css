@@ -106,3 +106,34 @@ input[type="radio"]:checked + label {
     display: block;
   }
 }
+.description-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.description-item {
+  margin-right: 20px; /* Adjust as needed */
+}
+
+.legend {
+  display: flex;
+  justify-content: center;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-right: 20px; /* Adjust spacing between legend items */
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  margin-right: 5px;
+}
+
+.legend-label {
+  font-size: 14px; /* Adjust font size as needed */
+}

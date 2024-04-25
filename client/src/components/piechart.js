@@ -1,5 +1,7 @@
+import "./top.css";
 import React, { useEffect, useRef, useState } from "react";
 import Chart from "chart.js/auto";
+import { Students } from "./studenttables";
 import { Dropdown } from "react-bootstrap";
 export const PieChart = ({ data }) => {
   const [all, setAll] = useState({
@@ -76,77 +78,76 @@ export const PieChart = ({ data }) => {
       });
     }
   }, [data[all.department]]);
-
   return (
-    <div
-      className="col-4"
-      style={{
-        boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
-        marginTop: "15px",
-        padding: "15px",
-        paddingRight: "15px",
-        borderRadius: "5px",
-        marginLeft: "15px",
-      }}
-    >
-      <div className="container-fluid">
-        {" "}
-        {/* container-fluid inside col-3 */}
-        <div className="row">
-          <div className="col-3">
-            <p
-              style={{
-                fontWeight: "bolder",
-                textTransform: "Capitalize",
-              }}
-            >
-              Overall Performance
-            </p>
-          </div>
-          <div className="col-3"></div>
-          <div className="col-6">
-            {/* Clicking this will toggle the dropdown */}
-            <Dropdown
-              show={isOpen}
-              align="end"
-              style={{ position: "relative", right: "3" }}
-            >
-              {" "}
-              {/* Dropdown component */}
-              <Dropdown.Toggle
-                variant="secondary"
-                id="dropdown-basic"
-                onClick={toggleDropdown}
-                className="bg-light text-dark"
-              >
-                {" "}
-                {/* Dropdown toggle button */}
-                {all.department}
-              </Dropdown.Toggle>
-              <Dropdown.Menu>
-                <Dropdown.Item onClick={(event) => changedept(event)}>
-                  science
-                </Dropdown.Item>{" "}
-                {/* Dropdown items */}
-                <Dropdown.Item onClick={(event) => changedept(event)}>
-                  art
-                </Dropdown.Item>
-                <Dropdown.Item onClick={(event) => changedept(event)}>
-                  commercial
-                </Dropdown.Item>
-              </Dropdown.Menu>
-            </Dropdown>
+    <div className="container-fluid" style={{ marginTop: "15px" }}>
+      <div className="row">
+        <div className="col-md-4">
+          <div className="card shadow-sm mb-3">
+            <div className="card-body">
+              <h5 className="card-title text-uppercase mb-4">
+                Overall Performance
+              </h5>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <p className="mb-0">Department:</p>
+                <Dropdown show={isOpen} align="end">
+                  <Dropdown.Toggle
+                    variant="secondary"
+                    id="dropdown-basic"
+                    onClick={toggleDropdown}
+                  >
+                    {all.department}
+                  </Dropdown.Toggle>
+                  <Dropdown.Menu>
+                    <Dropdown.Item onClick={(event) => changedept(event)}>
+                      science
+                    </Dropdown.Item>
+                    <Dropdown.Item
+                      onClick={(event) => alert(event.target.innerText)}
+                    >
+                      art
+                    </Dropdown.Item>
+                    <Dropdown.Item onClick={(event) => changedept(event)}>
+                      commercial
+                    </Dropdown.Item>
+                  </Dropdown.Menu>
+                </Dropdown>
+              </div>
+              <canvas ref={chartRef} width="400" height="400"></canvas>
+              <div className="legend mt-3">
+                <div className="legend-item">
+                  <span
+                    className="legend-dot"
+                    style={{ backgroundColor: "rgba(144, 241, 144, 0.5)" }}
+                  ></span>
+                  <span className="legend-label">Excellent</span>
+                </div>
+                <div className="legend-item">
+                  <span
+                    className="legend-dot"
+                    style={{ backgroundColor: "rgba(0, 0, 255, 0.473)" }}
+                  ></span>
+                  <span className="legend-label">Average</span>
+                </div>
+                <div className="legend-item">
+                  <span
+                    className="legend-dot"
+                    style={{ backgroundColor: "rgba(240, 162, 162, 0.555)" }}
+                  ></span>
+                  <span className="legend-label">Poor</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-        <div className="row">
-          <div className="col-1.5"></div>
-          <div className="col-0">
-            <canvas ref={chartRef} width="400" height="400"></canvas>{" "}
+        <div className="col-md-8">
+          <div className="card shadow-sm mb-3">
+            <div className="card-body">
+              <h5 className="card-title">Attendance</h5>
+              <Students />
+            </div>
           </div>
-          <div className="col-1.5"></div>
         </div>
-      </div>{" "}
-      {/* Closing container-fluid */}
+      </div>
     </div>
   );
 };
