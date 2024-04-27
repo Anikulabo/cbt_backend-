@@ -23,12 +23,16 @@ const Score = sequelize.define(
      score:{
         type:DataTypes.INTEGER,
         allowNull:true,
+     },
+     status:{
+      type:DataTypes.STRING,
+      allowNull:false,
      } 
     },
     {
       // Other model options
-      tableName: "Subjects", // Name of the table in the database
-      timestamps: true, // Include timestamps (createdAt, updatedAt)
+      tableName: "scores", // Name of the table in the database
+      timestamps: false, // Disable timestamps
     }
   );
   module.exports = Score;

@@ -41,7 +41,7 @@ exports.getUsers = async (req, res) => {
   try {
     // Construct the SQL query
     let query =
-      "SELECT users.username, users.department, users.image, scores.subject, scores.status FROM users LEFT JOIN scores ON users.id = scores.user_id where users.department!='admin'";
+      "SELECT scores.id,users.username, users.department, users.image, scores.subject, scores.status FROM users LEFT JOIN scores ON users.id = scores.user_id where users.department!='admin'";
     // Execute the query
     const results = await User.sequelize.query(query, {
       type: Sequelize.QueryTypes.SELECT, // specify the query type

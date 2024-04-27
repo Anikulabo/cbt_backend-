@@ -1,51 +1,39 @@
 import avatar from "./img/Avatart1.jpg";
-import { useState, useEffect } from "react";
 import axios from "axios";
-export const Students = () => {
-  const [data, setData] = useState(null);
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get("http://localhost:3001/api/users");
-        if (response.status >= 200 && response.status < 300) {
-          const jsonData = await response.data;
-          setData(jsonData);
-        } else {
-          throw new Error("Failed to fetch data");
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    // Fetch data initially when component mounts
-    fetchData();
-
-    // Fetch data every two seconds
-    const intervalId = setInterval(fetchData, 2000);
-
-    // Clean up the interval when the component unmounts
-    return () => clearInterval(intervalId);
-  }, []);
-  if (data) {
+export const Students = (props) => {
+  const toretake = async (event) => {
+    const buttonId = event.target.id;
+    try {
+      const data = {
+        score: 0,
+        status: "pending",
+      };
+      const response = await axios.put(
+        "http://localhost:3001/api/scores/" + buttonId,
+        data
+      );
+      alert(response.data.message);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  if (props.data) {
     return (
       <div
         className="table-responsive"
         style={{ maxHeight: "350px", overflowY: "auto" }}
       >
+        <h5 className="card-title">{props.title}</h5>
         <table className="table table-bordered">
           <thead>
             <tr>
-              <th>Image</th>
-              <th>Username</th>
-              <th>Department</th>
-              <th>Subject</th>
-              <th>Status</th>
-              <th>Action</th>
+              {props.headers.map((header, index) => (
+                <th key={index}>{header}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {data.map((info, index) => {
+            {props.data.map((info, index) => {
               return (
                 <tr key={index}>
                   {" "}
@@ -55,8 +43,8 @@ export const Students = () => {
                       alt="User Image"
                       className="img-fluid"
                       style={{
-                        maxWidth: "100px",
-                        maxHeight: "100px",
+                        maxWidth: "50px",
+                        maxHeight: "50px",
                         borderRadius: "50%",
                       }}
                     />
@@ -66,7 +54,11 @@ export const Students = () => {
                   <td>{info.subject}</td>
                   <td>{info.status}</td>
                   <td>
-                    <button className="btn btn-primary">
+                    <button
+                      className="btn btn-primary"
+                      id={info.id}
+                      onClick={(event) => toretake(event)}
+                    >
                       Return to Pending
                     </button>
                   </td>
@@ -80,8 +72,8 @@ export const Students = () => {
                   alt="User Image"
                   className="img-fluid"
                   style={{
-                    maxWidth: "100px",
-                    maxHeight: "100px",
+                    maxWidth: "50px",
+                    maxHeight: "50px",
                     borderRadius: "50%",
                   }}
                 />

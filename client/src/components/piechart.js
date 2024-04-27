@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Chart from "chart.js/auto";
 import { Students } from "./studenttables";
 import { Dropdown } from "react-bootstrap";
-export const PieChart = ({ data }) => {
+export const PieChart = ({ data, tabledata }) => {
   const [all, setAll] = useState({
     display: false,
     department: "science",
@@ -101,9 +101,7 @@ export const PieChart = ({ data }) => {
                     <Dropdown.Item onClick={(event) => changedept(event)}>
                       science
                     </Dropdown.Item>
-                    <Dropdown.Item
-                      onClick={(event) => alert(event.target.innerText)}
-                    >
+                    <Dropdown.Item onClick={(event) => changedept(event)}>
                       art
                     </Dropdown.Item>
                     <Dropdown.Item onClick={(event) => changedept(event)}>
@@ -142,8 +140,17 @@ export const PieChart = ({ data }) => {
         <div className="col-md-8">
           <div className="card shadow-sm mb-3">
             <div className="card-body">
-              <h5 className="card-title">Attendance</h5>
-              <Students />
+              <Students
+                headers={[
+                  "Image",
+                  "Username",
+                  "Department",
+                  "Subject",
+                  "Status",
+                  "Action",
+                ]}
+                data={tabledata}
+              />
             </div>
           </div>
         </div>

@@ -3,6 +3,7 @@ const path=require('path');
 const multer  = require('multer');
 const upload = multer(); // 
 const {createQuestion,getQuestions,updateQuestion,deleteQuestion}=require("./controllers/questionscontroller.js")
+const {addscore,updatescore,getall}=require("./controllers/scorecontroller.js")
 const {
   createUser,
   getUsers,
@@ -18,6 +19,9 @@ app.put('/api/users/:id',updateUser);
 app.delete('/api/users/:id',deleteUser);
 app.post('/api/questions',createQuestion);
 app.put('/api/questions/:id',updateQuestion)
+app.post('/api/scores',addscore);
+app.put('/api/scores/:id',updatescore);
+app.get('/api/scores',getall)
 app.post("/api/login",loginuser)
 app.listen(3001, () => {
   console.log("Server listening in http://localhost:3001");
