@@ -1,14 +1,77 @@
 import React from "react";
 import unaabImage from "./unaab.jpeg"; // Importing the image
-import { useNavigate } from 'react-router-dom';
-import { Adminwelcome, Admincard, PieChart } from "./components";
+import {
+  Adminwelcome,
+  Admincard,
+  PieChart,
+  Questionupload,
+} from "./components";
+import { changeVariable } from "./action";
 import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
 import { Link } from "react-router-dom";
 export const Admin = () => {
   const name = useSelector((state) => state.items.biodata.username);
+  const activity = useSelector((state) => state.items.activity);
+  const [duration, setDuration] = useState("min");
   const [data, setData] = useState(null);
+  const [file, setFile] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const dispatch = useDispatch();
+  const handleFileChange = (event) => {
+    setFile(event.target.files[0]);
+  };
+  const check = () => {
+    alert(
+      "the nexk subject will be " +
+        activity.subject +
+        " for " +
+        activity.dept +
+        " giving a duration of " +
+        activity.time
+    );
+  };
+  const settime = (event) => {
+    setDuration(event.target.value);
+  };
+  const updateactivity = (event, type) => {
+    let time = Number(event.target.value);
+    if (isNaN(time)) {
+      dispatch(changeVariable(event.target.value, type));
+    } else {
+      if (duration === "min") {
+        time = 60 * time;
+        dispatch(changeVariable(time, type));
+      }
+      if (duration === "hour") {
+        time = 3600 * time;
+        dispatch(changeVariable(time, type));
+      }
+    }
+  };
+  const handleUpload = async () => {
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      await axios.post("http://localhost:3001/api/questions", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      alert("File uploaded successfully!");
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      alert("Error uploading file. Please try again.");
+    }
+  };
+  const modalctrl = (type) => {
+    if (type === "open") {
+      setShowModal(true);
+    } else {
+      setShowModal(false);
+    }
+  };
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -49,6 +112,17 @@ export const Admin = () => {
   };
   return (
     <div className="container-fluid">
+      <Questionupload
+        showModal={showModal}
+        actions={{
+          control: modalctrl,
+          handleFileChange: handleFileChange,
+          handleUpload: handleUpload,
+          updateactivity: updateactivity,
+          settime: settime,
+          check:check
+        }}
+      />
       <div className="row">
         <div
           className="col-2 bg-dark text-light"
@@ -71,21 +145,19 @@ export const Admin = () => {
           </div>
           <div className="mt-4">
             <button
+              onClick={() => modalctrl("open")}
               className="btn btn-outline-light btn-block mb-2"
             >
               Upload questions
-            </button><br/>
-            <Link to="/registration">
-            <button
-              className="btn btn-outline-light btn-block mb-2"
-            >
-              Register a student
             </button>
+            <br />
+            <Link to="/registration">
+              <button className="btn btn-outline-light btn-block mb-2">
+                Register a student
+              </button>
             </Link>
-            <br/>
-            <button
-              className="btn btn-outline-light btn-block mb-2"
-            >
+            <br />
+            <button  className="btn btn-outline-light btn-block mb-2">
               Button 3
             </button>
           </div>
@@ -105,7 +177,7 @@ export const Admin = () => {
               />
             </div>
             <div className="row">
-              <PieChart data={pieChartData} tabledata={data}/>
+              <PieChart data={pieChartData} tabledata={data} />
             </div>
           </div>
         </div>

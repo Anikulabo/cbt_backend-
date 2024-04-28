@@ -1,14 +1,5 @@
 const Question = require('../models/questions');
-exports.createQuestion = async (req, res) => {
-  try {
-    const { question, option_a,option_b,option_c,option_d,correctAnswer} = req.body;
-    const questions = await Question.create({ question, option_a,option_b,option_c,option_d,correctAnswer });
-    res.json(questions);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
+const extractQuestions = require('./extractquestions');
 exports.getQuestions = async (req, res) => {
   try {
     const questions = await Question.findAll();
@@ -37,3 +28,15 @@ exports.deleteQuestion = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+exports.extractQuestion=async(req,res)=>{
+  try {
+    const { file } = req.files;
+    const questions = await extractQuestions(file.tempFilePath);
+    // Save questions to SQL database
+    const sent = Question.create(questions)
+    res.sendStatus(200);
+  } catch (error) {
+    console.error('Error processing file:', error);
+    res.status(500).send('Error processing file');
+  }
+}

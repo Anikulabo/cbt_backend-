@@ -2,7 +2,8 @@ const express=require('express');
 const path=require('path');
 const multer  = require('multer');
 const upload = multer(); // 
-const {createQuestion,getQuestions,updateQuestion,deleteQuestion}=require("./controllers/questionscontroller.js")
+const fileUpload = require('express-fileupload');
+const {extractQuestion,getQuestions,updateQuestion,deleteQuestion}=require("./controllers/questionscontroller.js")
 const {addscore,updatescore,getall}=require("./controllers/scorecontroller.js")
 const {
   createUser,
@@ -13,11 +14,12 @@ const {
 } = require('./controllers/userscontroller.js');
 const app = express();
 app.use(express.json());
+app.use(fileUpload());
 app.get('/api/users',getUsers);
 app.post('/api/users',upload.single('image'),createUser);
 app.put('/api/users/:id',updateUser);
 app.delete('/api/users/:id',deleteUser);
-app.post('/api/questions',createQuestion);
+app.post('/api/questions',updateQuestion);
 app.put('/api/questions/:id',updateQuestion)
 app.post('/api/scores',addscore);
 app.put('/api/scores/:id',updatescore);

@@ -10,11 +10,6 @@ const Question = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
-    subject:{
-      type:DataTypes.STRING,
-      allowNull:false,
-      unique:false
-    },
     question: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -42,8 +37,8 @@ const Question = sequelize.define(
   },
   {
     // Other model options
-    tableName: "Questions", // Name of the table in the database
-    timestamps: true, // Include timestamps (createdAt, updatedAt)
+    tableName: "questions", // Name of the table in the database
+    timestamps: false, // Include timestamps (createdAt, updatedAt)
   }
 );
 

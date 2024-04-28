@@ -65,27 +65,6 @@ export const Students = (props) => {
                 </tr>
               );
             })}
-            <tr>
-              <td>
-                <img
-                  src={avatar}
-                  alt="User Image"
-                  className="img-fluid"
-                  style={{
-                    maxWidth: "50px",
-                    maxHeight: "50px",
-                    borderRadius: "50%",
-                  }}
-                />
-              </td>
-              <td>John Doe</td>
-              <td>Science</td>
-              <td>Mathematics</td>
-              <td>Active</td>
-              <td>
-                <button className="btn btn-primary">Return to Pending</button>
-              </td>
-            </tr>
           </tbody>
         </table>
       </div>

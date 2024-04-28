@@ -10,6 +10,7 @@ import { Button } from "./Button";
 import { Adminwelcome } from "./adminwelcome";
 import { Admincard } from "./admincard";
 import { PieChart } from "./piechart";
+import { Questionupload } from "./uploadmodal";
 export {
   Welcome,
   Main,
@@ -22,4 +23,5 @@ export {
   Adminwelcome,
   Admincard,
   PieChart,
+  Questionupload
 };

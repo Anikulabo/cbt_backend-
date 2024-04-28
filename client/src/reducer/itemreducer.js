@@ -1,4 +1,3 @@
-import { camerastatus } from "../action";
 import {
   CHANGE_NUMBER,
   NAV,
@@ -26,9 +25,16 @@ const initialState = {
   successmessage: "",
   error: "both passwords must be equal before you can register",
   img: "",
-  biodata: { username: "", password: "", department: "", image: "", score: 0 },
+  biodata: {
+    username: "",
+    password: "",
+    department: "",
+    image: "",
+    score: 0,
+  },
   password1: "",
   password2: "",
+  activity: { subject: "", dept: "", time: 0 },
 };
 
 export const itemreducer = (state = initialState, action) => {
@@ -121,45 +127,63 @@ export const itemreducer = (state = initialState, action) => {
       }
     case CHANGE_VARIABLE:
       const { type, name } = action.payload;
-      if (type === "password1") {
-        return {
-          ...state,
-          password1: name,
-        };
-      }
-      if (type === "UserName") {
-        return {
-          ...state,
-          biodata: { ...state.biodata, username: name, image: name },
-        };
-      }
-      if (type === "password2") {
-        if (name === state.password1) {
+      switch (type) {
+        case "password1":
           return {
             ...state,
-            password2: name,
-            warning: { ...state.warning, signup: false },
+            password1: name,
+          };
+        case "UserName":
+          return {
+            ...state,
+            biodata: {
+              ...state.biodata,
+              username: name,
+              image: name,
+            },
+          };
+        case "password2":
+          if (name === state.password1) {
+            return {
+              ...state,
+              password2: name,
+              warning: { ...state.warning, signup: false },
+              biodata: { ...state.biodata, password: name },
+            };
+          } else {
+            return {
+              ...state,
+              password2: name,
+              warning: { ...state.warning, signup: true },
+            };
+          }
+        case "Department":
+          return {
+            ...state,
+            biodata: { ...state.biodata, department: name },
+          };
+        case "password":
+          return {
+            ...state,
             biodata: { ...state.biodata, password: name },
           };
-        } else {
+        case "adminsubject":
           return {
             ...state,
-            password2: name,
-            warning: { ...state.warning, signup: true },
+            activity: { ...state.activity, subject: name },
           };
-        }
-      }
-      if (type === "Department") {
-        return {
-          ...state,
-          biodata: { ...state.biodata, department: name },
-        };
-      }
-      if (type === "password") {
-        return {
-          ...state,
-          biodata: { ...state.biodata, password: name },
-        };
+        case "admindept":
+          return {
+            ...state,
+            activity: { ...state.activity, dept: name },
+          };
+        case "admintime":
+          return {
+            ...state,
+            activity: { ...state.activity, time: name },
+          };
+        default:
+          return state;
       }
     case NAV:
       return {
