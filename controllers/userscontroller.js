@@ -1,8 +1,10 @@
 const fs = require("fs");
 const { Sequelize } = require("sequelize");
 const User = require("../models/users.js");
+const score=require("../models/scores.js")
 const path = require("path");
 const { promisify } = require("util");
+const Score = require("../models/scores.js");
 const writeFileAsync = promisify(fs.writeFile);
 exports.createUser = async (req, res) => {
   try {
@@ -31,13 +33,16 @@ exports.createUser = async (req, res) => {
 
     // Save the user object to the database
     user = await User.create(user);
-
     res.status(201).json({ message: "User created successfully" });
+    let data=await User.findOne({ where: { username } })
+    Score.create({user_id:data.id})
+    res.status(201).json({ message: "User is ready to take an exam" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 exports.getUsers = async (req, res) => {
+  const{subject}=req.body
   try {
     // Construct the SQL query
     let query =

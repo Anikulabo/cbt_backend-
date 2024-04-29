@@ -15,9 +15,13 @@ export const Admin = () => {
   const name = useSelector((state) => state.items.biodata.username);
   const activity = useSelector((state) => state.items.activity);
   const [duration, setDuration] = useState("min");
+  const [after, setAfter] = useState(1);
   const [data, setData] = useState(null);
   const [file, setFile] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState({
+    frontend: false,
+    backend: false,
+  });
   const dispatch = useDispatch();
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
@@ -51,31 +55,44 @@ export const Admin = () => {
     }
   };
   const handleUpload = async () => {
-    const formData = new FormData();
-    formData.append("file", file);
     try {
-      await axios.post("http://localhost:3001/api/questions", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const formData = new FormData();
+      formData.append("name", activity.subject);
+      formData.append("department", activity.dept);
+      formData.append("timeAllocated", activity.time);
+      formData.append("attempt", after);
+      formData.append("file", file); // Assuming 'file' is the file object
+
+      const response = await axios.post(
+        "http://localhost:3001/api/questions",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      console.log("Response from backend:", response.data.message);
       alert("File uploaded successfully!");
     } catch (error) {
       console.error("Error uploading file:", error);
       alert("Error uploading file. Please try again.");
     }
   };
+
   const modalctrl = (type) => {
     if (type === "open") {
-      setShowModal(true);
+      setShowModal({ ...showModal, frontend: true });
     } else {
-      setShowModal(false);
+      setShowModal({ ...showModal, frontend: false });
     }
   };
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("http://localhost:3001/api/users");
+        const response = await axios.get("http://localhost:3001/api/users", {
+          subject: activity.subject,
+        });
         if (response.status >= 200 && response.status < 300) {
           const jsonData = await response.data;
           setData(jsonData);
@@ -113,14 +130,14 @@ export const Admin = () => {
   return (
     <div className="container-fluid">
       <Questionupload
-        showModal={showModal}
+        showModal={showModal.frontend}
         actions={{
           control: modalctrl,
           handleFileChange: handleFileChange,
           handleUpload: handleUpload,
           updateactivity: updateactivity,
           settime: settime,
-          check:check
+          check: check,
         }}
       />
       <div className="row">
@@ -157,7 +174,7 @@ export const Admin = () => {
               </button>
             </Link>
             <br />
-            <button  className="btn btn-outline-light btn-block mb-2">
+            <button className="btn btn-outline-light btn-block mb-2">
               Button 3
             </button>
           </div>

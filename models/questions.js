@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database.js");
+const Subject = require("./subjects.js");
 const Question = sequelize.define(
   "Question",
   {
@@ -34,6 +35,10 @@ const Question = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    Subject:{
+      type:DataTypes.STRING,
+      allowNull:false
+    }
   },
   {
     // Other model options

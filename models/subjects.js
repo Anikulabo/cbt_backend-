@@ -28,8 +28,8 @@ const Subject = sequelize.define(
   },
   {
     // Other model options
-    tableName: "Subjects", // Name of the table in the database
-    timestamps: true, // Include timestamps (createdAt, updatedAt)
+    tableName: "subjects", // Name of the table in the database
+    timestamps: false, // Include timestamps (createdAt, updatedAt)
   }
 );
 module.exports = Subject;
