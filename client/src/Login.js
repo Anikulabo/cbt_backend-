@@ -6,13 +6,19 @@ import {
   Textinput,
   Button,
 } from "./components";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import { Provider } from "react-redux";
 import { rootReducer } from "./reducer";
 import { createStore } from "redux";
 import { useSelector, useDispatch } from "react-redux";
-import { changeType, changeVariable, hideIcon, updatemessage } from "./action";
+import {
+  changeType,
+  changeVariable,
+  hideIcon,
+  updatemessage,
+  handlelogin,
+} from "./action";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./components/top.css";
 import exam4 from "./components/img/exam4.jpg";
@@ -22,7 +28,7 @@ import exam7 from "./components/img/exam7.jpg";
 import axios from "axios";
 export const store = createStore(rootReducer);
 function Login() {
-  const navigate=useNavigate()
+  const navigate = useNavigate();
   const [index, setIndex] = useState(0);
   const images = [exam4, exam5, exam6, exam7];
   const dispatch = useDispatch();
@@ -64,20 +70,28 @@ function Login() {
           username,
           password,
         });
-        console.log(response.data.userdata.department);
-       if(response.data.userdata.department!=="admin"){
-        navigate("/test"
-        ,{replace:true})
-       } 
-        else{
-          navigate("/admin",{replace:true})
+        if (response.data.userdata.department !== "admin") {
+          if (typeof response.data.questions !== "string") {
+            dispatch(
+              handlelogin(
+                response.data.subject,
+                response.data.questions,
+                response.data.time
+              )
+            );
+          }
+          navigate("/test", { replace: true });
+        } else {
+          navigate("/admin", { replace: true });
         }
       } catch (error) {
         console.error("Error logging in:", error.response.data);
-        dispatch(updatemessage("login-warning", error.response.data));  
+        dispatch(updatemessage("login-warning", error.response.data));
       }
     } else {
-      dispatch(updatemessage("login-warning", "input your username and password"));
+      dispatch(
+        updatemessage("login-warning", "input your username and password")
+      );
     }
   };
   return (

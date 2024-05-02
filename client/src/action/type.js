@@ -8,3 +8,4 @@ export const HIDEICON='HIDEICON';
 export const UPDATEERROR="UPDATEERROR";
 export const DESTROY="DESTROY";
 export const UPLOADIMAGE="UPLOADIMAGE";
+export const LOGIN="LOGIN";

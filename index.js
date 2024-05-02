@@ -1,9 +1,7 @@
 const express = require("express");
 const path = require("path");
 const multer = require("multer");
-const { Sequelize, where } = require("sequelize");
-const upload = multer(); //
-const fileUpload = require("express-fileupload");
+const { Sequelize } = require("sequelize");
 const Score = require("./models/scores.js");
 const Question = require("./models/questions.js");
 const Subject = require("./models/subjects.js");
@@ -27,12 +25,14 @@ const {
   deleteUser,
   loginuser,
 } = require("./controllers/userscontroller.js");
-const { subtle } = require("crypto");
 const app = express();
+const upload = multer({ dest: 'uploads/' });  
 app.use(express.json());
-app.use(fileUpload());
-app.post("/api/questions", async (req, res) => {
+app.post("/api/questions", upload.single('file'),async (req, res) => {
   try {
+    // if (!req.file) {
+    //   return res.status(400).json({ error: 'No file uploaded' });
+    // }
     const { name, department, timeAllocated, attempt } = req.body;
     let query = `
       SELECT scores.user_id 
@@ -86,7 +86,46 @@ app.post("/api/questions", async (req, res) => {
           // If the department is "all", update scores for all users
           await Score.update({ subject: name, status: "pending" });
         }
-
+        const file = req.file; // Access the file directly
+        const content = await extractQuestions(file.path, name);
+    
+        // Split content by questions
+        const questionBlocks = content.value.split("\n\n");
+    
+        // Initialize an array to store formatted questions
+        const formattedQuestions = [];
+    
+        // Process each question block
+        questionBlocks.forEach((block) => {
+          // Split block into lines
+          const lines = block.trim().split("\n");
+          const stoppage = lines[0].indexOf("?");
+          const currentQuestion = lines[0].slice(0, stoppage); // First line is the question
+          let indexa = lines[0].indexOf("a)");
+          let indexb = lines[0].indexOf("b)");
+          let indexc = lines[0].indexOf("c)");
+          let indexd = lines[0].indexOf("d)");
+          let ca = lines[0].indexOf("Correct Answer");
+          let option_a = lines[0].slice(indexa + 2, indexb).trim();
+          let option_b = lines[0].slice(indexb + 2, indexc).trim();
+          let option_c = lines[0].slice(indexc + 2, indexd).trim();
+          let option_d = lines[0].slice(indexd + 2, ca).trim();
+          let correctAnswer = lines[0].slice(ca + 18).trim();
+          // Create a formatted question object
+          const formattedQuestion = {
+            question: currentQuestion.trim(),
+            option_a: option_a,
+            option_b: option_b,
+            option_c: option_c,
+            option_d: option_d,
+            correctAnswer: correctAnswer,
+            subject: name, // Assuming `name` is defined somewhere in your code
+          };
+          // Push the formatted question to the array
+          if(formattedQuestion.question!==""){
+            Question.create(formattedQuestion);  
+          }
+        });
         res.status(201).json({
           message: "Subject created successfully and scores updated.",
         });

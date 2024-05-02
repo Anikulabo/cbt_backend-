@@ -35,7 +35,7 @@ const Question = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    Subject:{
+    subject:{
       type:DataTypes.STRING,
       allowNull:false
     }

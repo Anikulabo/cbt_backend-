@@ -8,7 +8,9 @@ import {
   UPDATEERROR,
   DESTROY,
   UPLOADIMAGE,
+  LOGIN
 } from "../action/type";
+import {QuizData} from "../question";
 const initialState = {
   number: 0,
   answered: [],
@@ -30,15 +32,28 @@ const initialState = {
     password: "",
     department: "",
     image: "",
-    score: 0,
+    activity: { subject: "", time: 0, score: 0, questions: QuizData },
   },
   password1: "",
   password2: "",
-  activity: { subject: "", dept: "", time: 0 },
 };
 
 export const itemreducer = (state = initialState, action) => {
   switch (action.type) {
+    case LOGIN:
+      const { subject, questions, time } = action.payload;
+      return {
+        ...state,
+        biodata: {
+          ...state.biodata,
+          activity: {
+            ...state.biodata.activity,
+            subject: subject,
+            questions: questions,
+            time: time,
+          },
+        },
+      };
     case CHANGE_NUMBER:
       return {
         ...state,
@@ -170,17 +185,17 @@ export const itemreducer = (state = initialState, action) => {
         case "adminsubject":
           return {
             ...state,
-            activity: { ...state.activity, subject: name },
-          };
-        case "admindept":
-          return {
-            ...state,
-            activity: { ...state.activity, dept: name },
+            biodata: {
+              ...state.biodata,
+              activity: { ...state.biodata.activity, subject: name },
+            },
           };
         case "admintime":
           return {
-            ...state,
-            activity: { ...state.activity, time: name },
+            biodata: {
+              ...state.biodata,
+              activity: { ...state.biodata.activity, time: name },
+            },
           };
         default:
           return state;

@@ -10,6 +10,7 @@ function Test(props) {
   let tabledisplay = useSelector((state) => state.items.showtable);
   let answered = useSelector((state) => state.items.answered);
   let data = useSelector((state) => state.items.biodata);
+  let questions=data.activity.questions;
   const [btndisplay, setBtndisplay] = useState({
     next: "block",
     previous: "none",
@@ -21,25 +22,25 @@ function Test(props) {
       setBtndisplay((prevDisplay) => ({ ...prevDisplay, previous: "none" }));
     }
 
-    if (num === props.questions.length - 1) {
+    if (num === questions.length - 1) {
       setBtndisplay((prevDisplay) => ({ ...prevDisplay, next: "none" }));
     } else {
       setBtndisplay((prevDisplay) => ({ ...prevDisplay, next: "block" }));
     }
-  }, [num, props.questions.length]);
+  }, [num, questions.length]);
   let dispatch = useDispatch();
   const move = (event) => {
     if (!isNaN(event.target.innerHTML)) {
-      dispatch(changenum(num, event.target.innerHTML, props.questions.length));
+      dispatch(changenum(num, event.target.innerHTML, questions.length));
     }
-    if (parseInt(event.target.innerHTML) > props.questions.length) {
+    if (parseInt(event.target.innerHTML) > questions.length) {
       alert("You have exceeded the total number of questions.");
     } else {
       const buttonText = event.target.innerHTML.trim().toLowerCase();
       if (buttonText === "next") {
-        dispatch(changenum(num, "add", props.questions.length));
+        dispatch(changenum(num, "add", questions.length));
       } else if (buttonText === "previous") {
-        dispatch(changenum(num, "subtract", props.questions.length));
+        dispatch(changenum(num, "subtract", questions.length));
       }
     }
   };
@@ -66,7 +67,7 @@ function Test(props) {
     >
       <Welcome />
       <Main
-        question={props.questions[num]}
+        question={questions[num]}
         number={num}
         actions={{ move: move, save: save }}
         bottombtn={btndisplay}

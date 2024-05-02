@@ -58,6 +58,9 @@ export const Students = (props) => {
                       className="btn btn-primary"
                       id={info.id}
                       onClick={(event) => toretake(event)}
+                      style={{
+                        display: info.status === "no exam" ? "none" : "block",
+                      }}
                     >
                       Return to Pending
                     </button>

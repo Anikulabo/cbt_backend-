@@ -13,7 +13,8 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 export const Admin = () => {
   const name = useSelector((state) => state.items.biodata.username);
-  const activity = useSelector((state) => state.items.activity);
+  const activity = useSelector((state) => state.items.biodata.activity);
+  const dept = useSelector((state) => state.items.biodata.department);
   const [duration, setDuration] = useState("min");
   const [after, setAfter] = useState(1);
   const [data, setData] = useState(null);
@@ -28,7 +29,7 @@ export const Admin = () => {
   };
   const check = () => {
     alert(
-      "the nexk subject will be " +
+      "the next subject will be " +
         activity.subject +
         " for " +
         activity.dept +
@@ -45,39 +46,33 @@ export const Admin = () => {
       dispatch(changeVariable(event.target.value, type));
     } else {
       if (duration === "min") {
-        time = 60 * time;
+        time = 100 * time;
         dispatch(changeVariable(time, type));
       }
       if (duration === "hour") {
-        time = 3600 * time;
+        time = 10000 * time;
         dispatch(changeVariable(time, type));
       }
     }
   };
   const handleUpload = async () => {
-    try {
-      const formData = new FormData();
-      formData.append("name", activity.subject);
-      formData.append("department", activity.dept);
-      formData.append("timeAllocated", activity.time);
-      formData.append("attempt", after);
-      formData.append("file", file); // Assuming 'file' is the file object
-
-      const response = await axios.post(
-        "http://localhost:3001/api/questions",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      console.log("Response from backend:", response.data.message);
-      alert("File uploaded successfully!");
-    } catch (error) {
-      console.error("Error uploading file:", error);
-      alert("Error uploading file. Please try again.");
-    }
+     try {
+       const formData = new FormData();
+       formData.append("name", activity.subject);
+       formData.append("department", dept);
+       formData.append("timeAllocated", activity.time);
+       formData.append("attempt", after);
+       formData.append("file", file);
+       const response = await axios.post(
+         "http://localhost:3001/api/questions",
+         formData
+       );
+       console.log("Response from backend:", response.data.message);
+       alert("File uploaded successfully!");
+     } catch (error) {
+       console.error("Error uploading file:", error);
+       alert("Error uploading file. Please try again.");
+     }
   };
 
   const modalctrl = (type) => {
@@ -90,9 +85,7 @@ export const Admin = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("http://localhost:3001/api/users", {
-          subject: activity.subject,
-        });
+        const response = await axios.get("http://localhost:3001/api/users");
         if (response.status >= 200 && response.status < 300) {
           const jsonData = await response.data;
           setData(jsonData);
@@ -133,13 +126,55 @@ export const Admin = () => {
         showModal={showModal.frontend}
         actions={{
           control: modalctrl,
-          handleFileChange: handleFileChange,
-          handleUpload: handleUpload,
-          updateactivity: updateactivity,
-          settime: settime,
-          check: check,
+          mainfunction: handleUpload,
         }}
-      />
+        footer={{ close: "close", mainfunction: "upload" }}
+        title="Upload a Word document"
+      >
+        <input
+          type="text"
+          placeholder="name of subject"
+          className="container-fluid"
+          onChange={(event) => updateactivity(event, "adminsubject")}
+        />
+        <br />
+        <input
+          type="text"
+          placeholder="department taking the subject"
+          className="container-fluid mt-3"
+          onChange={(event) => updateactivity(event, "Department")}
+        />
+        <br />
+        <div>
+          <input
+            className="mt-3"
+            type="number"
+            style={{ width: "10%" }}
+            onChange={(event) => updateactivity(event, "admintime")}
+          />
+          <select className="mt-3" style={{ width: "30%" }}>
+            <option
+              value="min"
+              style={{ padding: "5px" }}
+              onClick={(event) => settime(event)}
+            >
+              Minutes
+            </option>
+            <option
+              value="hour"
+              style={{ padding: "5px" }}
+              onClick={(event) => settime(event)}
+            >
+              Hours
+            </option>
+          </select>
+        </div>
+        <input
+          className="mt-3"
+          type="file"
+          onChange={(event) => handleFileChange(event)}
+        />
+      </Questionupload>
       <div className="row">
         <div
           className="col-2 bg-dark text-light"

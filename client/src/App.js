@@ -37,7 +37,7 @@ function App() {
             path="/test"
             element={
               <Provider store={store}>
-                <Test questions={QuizData} />
+                <Test />
               </Provider>
             }
           />

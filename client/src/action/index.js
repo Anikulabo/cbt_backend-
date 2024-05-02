@@ -8,6 +8,7 @@ import {
   UPDATEERROR,
   DESTROY,
   UPLOADIMAGE,
+  LOGIN,
 } from "./type";
 export const changenum = (number, operator, total) => {
   let newItem;
@@ -51,10 +52,10 @@ export const changeType = (which) => {
     payload: which,
   };
 };
-export const hideIcon = (where,length) => {
+export const hideIcon = (where, length) => {
   return {
     type: HIDEICON,
-    payload: {where,length}
+    payload: { where, length },
   };
 };
 export const destroy = () => {
@@ -63,15 +64,21 @@ export const destroy = () => {
     payload: "",
   };
 };
-export const handleUploadPhoto=(image,shownimage)=>{
+export const handleUploadPhoto = (image, shownimage) => {
+  return {
+    type: UPLOADIMAGE,
+    payload: { image, shownimage },
+  };
+};
+export const handlelogin = (subject, questions,time) => {
   return{
-    type:UPLOADIMAGE,
-    payload:{image,shownimage},
+    type:LOGIN,
+    payload:{subject,questions,time}
   }
-}
+};
 export const updatemessage = (part, message) => {
   return {
     type: UPDATEERROR,
-    payload: { part, message},
+    payload: { part, message },
   };
 };

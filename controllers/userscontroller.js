@@ -1,9 +1,11 @@
 const fs = require("fs");
-const { Sequelize } = require("sequelize");
+const { Sequelize, where } = require("sequelize");
 const User = require("../models/users.js");
-const score=require("../models/scores.js")
+const score = require("../models/scores.js");
 const path = require("path");
 const { promisify } = require("util");
+const subject = require("../models/subjects.js");
+const Question = require("../models/questions.js");
 const Score = require("../models/scores.js");
 const writeFileAsync = promisify(fs.writeFile);
 exports.createUser = async (req, res) => {
@@ -34,15 +36,14 @@ exports.createUser = async (req, res) => {
     // Save the user object to the database
     user = await User.create(user);
     res.status(201).json({ message: "User created successfully" });
-    let data=await User.findOne({ where: { username } })
-    Score.create({user_id:data.id})
+    let data = await User.findOne({ where: { username } });
+    Score.create({ user_id: data.id });
     res.status(201).json({ message: "User is ready to take an exam" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 exports.getUsers = async (req, res) => {
-  const{subject}=req.body
   try {
     // Construct the SQL query
     let query =
@@ -87,7 +88,32 @@ exports.loginuser = async (req, res) => {
   try {
     const user = await User.findOne({ where: { username } });
     if (user && password === user.password) {
-      res.json({ userdata: user });
+      const test = await subject.findOne({
+        where: { department: user.department },
+      });
+      let questions = null;
+      if (test) {
+        questions = await Question.findAll({
+          where: { subject: test.name },
+        });
+        res.json({
+          userdata: user,
+          questions: questions,
+          subject: test.name,
+          time: test.timeAllocated,
+        });
+      } else {
+        if(user.department!=="admin"){
+          res.json({
+            userdata: user,
+            questions: "your department is not working for now",
+          });  
+        }else{
+          res.json({
+            userdata: user,
+          })  
+        }
+      }
     } else {
       res.status(401).send("Invalid username or password");
     }

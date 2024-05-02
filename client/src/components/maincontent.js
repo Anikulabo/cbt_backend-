@@ -15,6 +15,12 @@ export const Main = ({
   user,
 }) => {
   const [avatarSrc, setAvatarSrc] = useState(null);
+ let options = [
+    question.option_a,
+    question.option_b,
+    question.option_c,
+    question.option_d,
+  ];
   useEffect(() => {
     const fetchAvatar = async () => {
       try {
@@ -91,8 +97,8 @@ export const Main = ({
             className="container text-lemon mt-3"
             style={{ fontWeight: "bolder" }}
           >
-            <span>Exam/Subject</span>
-            <span style={{ marginLeft: "80%" }}>42:30:54</span>
+            <span>{"Exam/"+user.activity.subject}</span>
+            <span style={{ marginLeft: "80%" }}>{user.activity.time}</span>
           </div>
           <div
             className="container"
@@ -119,7 +125,7 @@ export const Main = ({
                   </div>
                   <div>{question.question}</div>
                   <Option
-                    options={question.options}
+                    options={options}
                     no={question.id}
                     save={actions.save}
                     answer={answers}
@@ -139,7 +145,7 @@ export const Main = ({
                   />
                 </div>
                 <div className="col-md-4 d-flex justify-content-center">
-                  <CameraComponent  answers={answers}/>
+                  <CameraComponent answers={answers} />
                 </div>
               </div>
             </div>
