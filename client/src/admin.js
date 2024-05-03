@@ -17,8 +17,11 @@ export const Admin = () => {
   const dept = useSelector((state) => state.items.biodata.department);
   const [duration, setDuration] = useState("min");
   const [after, setAfter] = useState(1);
+  const [notification,setNotification]=useState([])
   const [data, setData] = useState(null);
   const [file, setFile] = useState(null);
+  const[workingdepts,setworkingdepts]=useState(["science","art"])
+  const[results,setResults]=useState(null)
   const [showModal, setShowModal] = useState({
     frontend: false,
     backend: false,
@@ -27,19 +30,18 @@ export const Admin = () => {
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
   };
-  const check = () => {
-    alert(
-      "the next subject will be " +
-        activity.subject +
-        " for " +
-        activity.dept +
-        " giving a duration of " +
-        activity.time
-    );
-  };
   const settime = (event) => {
     setDuration(event.target.value);
   };
+  const addnotification = (message) => {
+    if (notification.indexOf(message) === -1) {
+      setNotification([...notification, message]);
+    }
+  };
+  
+  const shownotification=()=>{
+    alert(notification);
+  }
   const updateactivity = (event, type) => {
     let time = Number(event.target.value);
     if (isNaN(time)) {
@@ -69,6 +71,7 @@ export const Admin = () => {
        );
        console.log("Response from backend:", response.data.message);
        alert("File uploaded successfully!");
+       setworkingdepts([...workingdepts,dept])
      } catch (error) {
        console.error("Error uploading file:", error);
        alert("Error uploading file. Please try again.");
@@ -85,27 +88,38 @@ export const Admin = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("http://localhost:3001/api/users");
-        if (response.status >= 200 && response.status < 300) {
-          const jsonData = await response.data;
-          setData(jsonData);
+        // Fetch users data
+        const usersResponse = await axios.get("http://localhost:3001/api/users");
+        if (usersResponse.status >= 200 && usersResponse.status < 300) {
+          const usersData = await usersResponse.data;
+          setData(usersData);
         } else {
-          throw new Error("Failed to fetch data");
+          throw new Error("Failed to fetch users data");
+        }
+  
+        // Fetch data for each department
+        for (const dept of workingdepts) {
+          const downloadResponse = await axios.get(`http://localhost:3001/api/download/${dept}`);
+          if (downloadResponse.status === 201) {
+            addnotification(downloadResponse.data.message);
+            setResults(downloadResponse.data.results);
+          }
         }
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
-
+  
     // Fetch data initially when component mounts
     fetchData();
-
-    // Fetch data every two seconds
+  
+    // Fetch data every 2 seconds
     const intervalId = setInterval(fetchData, 2000);
-
-    // Clean up the interval when the component unmounts
+  
+    // Cleanup interval on component unmount
     return () => clearInterval(intervalId);
-  }, []);
+  }, []); // Empty dependency array to run effect only once on mount
+  
   const pieChartData = {
     science: {
       labels: ["Excellent", "Average", "Poor"],
@@ -216,7 +230,7 @@ export const Admin = () => {
         </div>
 
         <div className="col-10" style={{ minHeight: "100vh" }}>
-          <Adminwelcome name={name} />
+          <Adminwelcome name={name} shownotification={shownotification}/>
           <hr />
           <div className="container-fluid" style={{ marginTop: "15px" }}>
             <div className="row">

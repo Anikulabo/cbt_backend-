@@ -29,6 +29,7 @@ export const Adminwelcome = (props) => {
             <i
               className="fa fa-bell"
               style={{ marginTop: "5px", fontSize: "2rem" }}
+            onClick={()=>props.shownotification()}
             ></i>
             <img
               src={avatarSrc}

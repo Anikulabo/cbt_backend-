@@ -1,12 +1,12 @@
 const fs = require("fs");
-const { Sequelize, where } = require("sequelize");
+const { Sequelize } = require("sequelize");
 const User = require("../models/users.js");
-const score = require("../models/scores.js");
 const path = require("path");
 const { promisify } = require("util");
 const subject = require("../models/subjects.js");
 const Question = require("../models/questions.js");
 const Score = require("../models/scores.js");
+const Subject = require("../models/subjects.js");
 const writeFileAsync = promisify(fs.writeFile);
 exports.createUser = async (req, res) => {
   try {
@@ -83,6 +83,49 @@ exports.deleteUser = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+// Assume you have imported the necessary modules and models
+
+exports.notificationForDownload = async (req, res) => {
+  try {
+    const { dept } = req.params; // Access query parameters instead of body
+
+    // Find the subject for the specified department
+    const subject = await Subject.findOne({ where: { department: dept } });
+
+    if (!subject) {
+      return res.status(404).json({ error: "Subject not found for the specified department" });
+    }
+
+    // Find all students in the department
+    const studentsInDept = await User.findAll({ where: { department: dept } });
+
+    // Find all test takers who have completed the test for the subject
+    const testTakers = await Score.findAll({
+      where: { status: "done", subject: subject.name },
+    });
+ 
+    // Check if the number of test takers matches the number of students in the department
+    if (testTakers.length === studentsInDept.length) {
+      let query =
+        `SELECT users.username, users.image, scores.score FROM users LEFT JOIN scores ON users.id = scores.user_id where users.department='${dept}'`;
+      const results = await User.sequelize.query(query, {
+        type: Sequelize.QueryTypes.SELECT, // specify the query type
+      });
+      return res.status(201).json({
+        message: `The results for ${subject.name} in ${dept} are now ready for download`,
+         results: results,
+      });
+    } else {
+      return res.status(200).json({
+        message: `Waiting for all students in ${dept} to complete the test for ${subject.name}`,
+      });
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 exports.loginuser = async (req, res) => {
   const { username, password } = req.body;
   try {
@@ -103,15 +146,15 @@ exports.loginuser = async (req, res) => {
           time: test.timeAllocated,
         });
       } else {
-        if(user.department!=="admin"){
+        if (user.department !== "admin") {
           res.json({
             userdata: user,
             questions: "your department is not working for now",
-          });  
-        }else{
+          });
+        } else {
           res.json({
             userdata: user,
-          })  
+          });
         }
       }
     } else {

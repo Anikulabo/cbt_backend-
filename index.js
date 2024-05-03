@@ -24,6 +24,7 @@ const {
   updateUser,
   deleteUser,
   loginuser,
+  notificationForDownload
 } = require("./controllers/userscontroller.js");
 const app = express();
 const upload = multer({ dest: 'uploads/' });  
@@ -144,6 +145,8 @@ app.put("/api/questions/:id", updateQuestion);
 app.put("/api/scores/:id", updatescore);
 app.get("/api/scores", getall);
 app.post("/api/login", loginuser);
+app.get("/api/download/:dept", notificationForDownload)
+
 app.listen(3001, () => {
   console.log("Server listening in http://localhost:3001");
 });
