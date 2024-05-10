@@ -2,11 +2,13 @@ import avatar from "./img/Avatart1.jpg";
 import axios from "axios";
 export const Students = (props) => {
   const toretake = async (event) => {
-    const buttonId = event.target.id;
-    try {
+    const buttonId = Number(event.target.id);
+    const prevdata = props.data.find(item => item.id === buttonId);
+    try {   
       const data = {
         score: 0,
         status: "pending",
+        subject:prevdata.subject
       };
       const response = await axios.put(
         "http://localhost:3001/api/scores/" + buttonId,

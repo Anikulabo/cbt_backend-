@@ -34,10 +34,10 @@ export const shownav = (val) => {
     payload: !val,
   };
 };
-export const updateAnswered = (ansi, indexi) => {
+export const updateAnswered = (ansi, indexi,num) => {
   return {
     type: UPDATE_ANSWERED,
-    payload: { ansi, indexi },
+    payload: { ansi, indexi,num },
   };
 };
 export const changeVariable = (name, type) => {
@@ -70,10 +70,11 @@ export const handleUploadPhoto = (image, shownimage) => {
     payload: { image, shownimage },
   };
 };
-export const handlelogin = (subject, questions,time) => {
+export const handlelogin = (subject, questions,time,dept,scoreid) => {
+  alert(scoreid);
   return{
     type:LOGIN,
-    payload:{subject,questions,time}
+    payload:{subject,questions,time,dept,scoreid}
   }
 };
 export const updatemessage = (part, message) => {

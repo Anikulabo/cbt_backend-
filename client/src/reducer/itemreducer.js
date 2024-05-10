@@ -8,9 +8,9 @@ import {
   UPDATEERROR,
   DESTROY,
   UPLOADIMAGE,
-  LOGIN
+  LOGIN,
 } from "../action/type";
-import {QuizData} from "../question";
+import { QuizData } from "../question";
 const initialState = {
   number: 0,
   answered: [],
@@ -32,6 +32,7 @@ const initialState = {
     password: "",
     department: "",
     image: "",
+    scoreid: "",
     activity: { subject: "", time: 0, score: 0, questions: QuizData },
   },
   password1: "",
@@ -41,11 +42,13 @@ const initialState = {
 export const itemreducer = (state = initialState, action) => {
   switch (action.type) {
     case LOGIN:
-      const { subject, questions, time } = action.payload;
+      const { subject, questions, time, dept, scoreid } = action.payload;
       return {
         ...state,
         biodata: {
           ...state.biodata,
+          department: dept,
+          scoreid:scoreid,
           activity: {
             ...state.biodata.activity,
             subject: subject,
@@ -83,6 +86,7 @@ export const itemreducer = (state = initialState, action) => {
           department: "",
           score: 0,
         },
+        error: "",
       };
     case UPDATEERROR:
       let { part, message } = action.payload;
@@ -206,14 +210,14 @@ export const itemreducer = (state = initialState, action) => {
         showtable: action.payload,
       };
     case UPDATE_ANSWERED:
-      const { ansi, indexi } = action.payload;
+      const { ansi, indexi, num } = action.payload;
       const questionIndex = state.answered.findIndex(
         (item) => item.id === indexi
       );
       if (questionIndex >= 0) {
         const newAnswered = state.answered.map((ans, index) => {
           if (index === questionIndex) {
-            return { id: index, answer: ansi };
+            return { num: num, id: index, answer: ansi };
           } else {
             return ans;
           }
@@ -225,7 +229,7 @@ export const itemreducer = (state = initialState, action) => {
       } else {
         return {
           ...state,
-          answered: [...state.answered, { id: indexi, answer: ansi }],
+          answered: [...state.answered, { id: indexi, answer: ansi, num: num }],
         };
       }
     default:

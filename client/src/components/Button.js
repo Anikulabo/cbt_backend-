@@ -7,7 +7,7 @@ export const Button = (props) => {
       onClick={(event) => {
         if(props.action){
             props.action(event);    
-        }
+          }
         else{
             alert("no event handler for this button yet")
         }

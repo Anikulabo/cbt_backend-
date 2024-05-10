@@ -24,7 +24,7 @@ export const Option = ({ options, no, save, answer }) => {
               checked={isOptionSelected}
               onClick={(event) => {
                 handleRadioChange();
-                save(event);
+                save(event,no);
               }}
             />
             <span style={{marginLeft:"15px"}}>{option}</span>

@@ -17,14 +17,14 @@ export const Admin = () => {
   const dept = useSelector((state) => state.items.biodata.department);
   const [duration, setDuration] = useState("min");
   const [after, setAfter] = useState(1);
-  const [notification,setNotification]=useState([])
+  const [notification, setNotification] = useState([]);
   const [data, setData] = useState(null);
   const [file, setFile] = useState(null);
-  const[workingdepts,setworkingdepts]=useState(["science","art"])
-  const[results,setResults]=useState(null)
+  const [results, setResults] = useState(null);
   const [showModal, setShowModal] = useState({
-    frontend: false,
+    subjectview: false,
     backend: false,
+    resultview: false,
   });
   const dispatch = useDispatch();
   const handleFileChange = (event) => {
@@ -33,15 +33,6 @@ export const Admin = () => {
   const settime = (event) => {
     setDuration(event.target.value);
   };
-  const addnotification = (message) => {
-    if (notification.indexOf(message) === -1) {
-      setNotification([...notification, message]);
-    }
-  };
-  
-  const shownotification=()=>{
-    alert(notification);
-  }
   const updateactivity = (event, type) => {
     let time = Number(event.target.value);
     if (isNaN(time)) {
@@ -58,68 +49,104 @@ export const Admin = () => {
     }
   };
   const handleUpload = async () => {
-     try {
-       const formData = new FormData();
-       formData.append("name", activity.subject);
-       formData.append("department", dept);
-       formData.append("timeAllocated", activity.time);
-       formData.append("attempt", after);
-       formData.append("file", file);
-       const response = await axios.post(
-         "http://localhost:3001/api/questions",
-         formData
-       );
-       console.log("Response from backend:", response.data.message);
-       alert("File uploaded successfully!");
-       setworkingdepts([...workingdepts,dept])
-     } catch (error) {
-       console.error("Error uploading file:", error);
-       alert("Error uploading file. Please try again.");
-     }
+    try {
+      const formData = new FormData();
+      formData.append("name", activity.subject);
+      formData.append("department", dept);
+      formData.append("timeAllocated", activity.time);
+      formData.append("attempt", after);
+      formData.append("file", file);
+      const response = await axios.post(
+        "http://localhost:3001/api/questions",
+        formData
+      );
+      console.log("Response from backend:", response.data.message);
+      alert("File uploaded successfully!");
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      alert("Error uploading file. Please try again.");
+    }
   };
 
   const modalctrl = (type) => {
-    if (type === "open") {
-      setShowModal({ ...showModal, frontend: true });
-    } else {
-      setShowModal({ ...showModal, frontend: false });
+    if (type === "viewopen") {
+      setShowModal({ ...showModal, subjectview: true });
+    }
+    if (type === "viewclose") {
+      setShowModal({ ...showModal, subjectview: false });
+    }
+    if (type === "resultsopen") {
+      setShowModal({ ...showModal, resultview: true });
+    }
+    if (type === "resultsclose") {
+      setShowModal({ ...showModal, resultview: false });
+    }
+  };
+  const viewresult = async (event) => {
+    const dept = event.target.id;
+    try {
+      const results = await axios.get(
+        `http://localhost:3001/api/scores/${dept}`
+      );
+      if (results.status === 200) {
+        setResults(results.data);
+        console.log(results.data);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
     }
   };
   useEffect(() => {
     const fetchData = async () => {
       try {
         // Fetch users data
-        const usersResponse = await axios.get("http://localhost:3001/api/users");
+        const usersResponse = await axios.get(
+          "http://localhost:3001/api/users"
+        );
+        let depts = [];
+        let notifications = [];
         if (usersResponse.status >= 200 && usersResponse.status < 300) {
           const usersData = await usersResponse.data;
+          for (const data of usersData) {
+            if (depts.indexOf(data.department) < 0) {
+              depts.push(data.department);
+            }
+          }
           setData(usersData);
+          for (const dept of depts) {
+            console.log(dept);
+            const downloadResponse = await axios.get(
+              `http://localhost:3001/api/download/${dept}`
+            );
+            if (downloadResponse.status === 201) {
+              console.log(downloadResponse.data.message)
+              notifications.push({
+                dept: dept,
+                message: downloadResponse.data.message,
+                subject:downloadResponse.data.subject
+              });
+            }
+            setNotification(notifications);
+          }
+        console.log(notification);
         } else {
           throw new Error("Failed to fetch users data");
-        }
-  
-        // Fetch data for each department
-        for (const dept of workingdepts) {
-          const downloadResponse = await axios.get(`http://localhost:3001/api/download/${dept}`);
-          if (downloadResponse.status === 201) {
-            addnotification(downloadResponse.data.message);
-            setResults(downloadResponse.data.results);
-          }
         }
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
-  
+
     // Fetch data initially when component mounts
     fetchData();
-  
+
     // Fetch data every 2 seconds
     const intervalId = setInterval(fetchData, 2000);
-  
+
     // Cleanup interval on component unmount
     return () => clearInterval(intervalId);
   }, []); // Empty dependency array to run effect only once on mount
-  
+
   const pieChartData = {
     science: {
       labels: ["Excellent", "Average", "Poor"],
@@ -136,13 +163,34 @@ export const Admin = () => {
   };
   return (
     <div className="container-fluid">
+      {notification && (
+        <Questionupload
+          showModal={showModal.resultview}
+          actions={{ control: modalctrl }}
+          title="Notifications"
+          footer={{ close: "close", mainfunction: "upload",modalcontrolled:"results" }}
+        >
+          {notification.map((content, index) => (
+            <div key={index}>
+              {content.message}
+              <button
+                id={content.dept}
+                className="btn btn-primary"
+                onClick={(event) => viewresult(event)}
+              >
+                view
+              </button>
+            </div>
+          ))}
+        </Questionupload>
+      )}
       <Questionupload
-        showModal={showModal.frontend}
+        showModal={showModal.subjectview}
         actions={{
           control: modalctrl,
           mainfunction: handleUpload,
         }}
-        footer={{ close: "close", mainfunction: "upload" }}
+        footer={{ close: "close", mainfunction: "upload",modalcontrolled:"view" }}
         title="Upload a Word document"
       >
         <input
@@ -211,7 +259,7 @@ export const Admin = () => {
           </div>
           <div className="mt-4">
             <button
-              onClick={() => modalctrl("open")}
+              onClick={() => modalctrl("viewopen")}
               className="btn btn-outline-light btn-block mb-2"
             >
               Upload questions
@@ -228,9 +276,12 @@ export const Admin = () => {
             </button>
           </div>
         </div>
-
         <div className="col-10" style={{ minHeight: "100vh" }}>
-          <Adminwelcome name={name} shownotification={shownotification}/>
+          <Adminwelcome
+            name={name}
+            shownotification={modalctrl}
+            notifications={notification}
+          />
           <hr />
           <div className="container-fluid" style={{ marginTop: "15px" }}>
             <div className="row">

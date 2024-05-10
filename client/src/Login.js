@@ -70,30 +70,46 @@ function Login() {
           username,
           password,
         });
+        console.log("Response from backend:", response);
+  
         if (response.data.userdata.department !== "admin") {
-          if (typeof response.data.questions !== "string") {
+          if (response.status === 200) {
             dispatch(
               handlelogin(
                 response.data.subject,
                 response.data.questions,
-                response.data.time
+                response.data.time,
+                response.data.userdata.department,
+                response.data.scoreid
               )
             );
+            navigate("/test", { replace: true });
+          } else {
+            dispatch(updatemessage("login-warning", response.data.message));
+            console.log(response.data.message);
           }
-          navigate("/test", { replace: true });
         } else {
           navigate("/admin", { replace: true });
         }
       } catch (error) {
-        console.error("Error logging in:", error.response.data);
-        dispatch(updatemessage("login-warning", error.response.data));
+        // Check if error.response exists before accessing its properties
+        if (error.response && error.response.data) {
+          console.error("Error logging in:", error.response.data);
+          dispatch(updatemessage("login-warning", error.response.data));
+        } else {
+          console.error("Error logging in:", error);
+          // Handle other types of errors, e.g., network errors
+          dispatch(updatemessage("login-warning", "An error occurred during login"));
+        }
       }
     } else {
       dispatch(
-        updatemessage("login-warning", "input your username and password")
+        updatemessage("login-warning", "Input your username and password")
       );
     }
   };
+  
+  
   return (
     <div className="container-fluid h-100" style={{ overflowY: "auto" }}>
       <div className="row h-100">

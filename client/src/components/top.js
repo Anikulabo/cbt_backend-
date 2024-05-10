@@ -1,5 +1,5 @@
 import "./top.css"
-export const Welcome = () => {
+export const Welcome = ({username}) => {
   return (
     <div className="container-fluid">
       <div className="row text-lemon" style={{border:"0.5px solid gray"}}>
@@ -10,7 +10,7 @@ export const Welcome = () => {
           <button type="button" className="btn btn-light text-lemon" style={{borderCollapse:"collapse"}}>
           &#9776;
           </button>
-          <span> <button className="btn btn-light" style={{borderRadius:"50px",color:"green"}}><i class="fas fa-user"></i></button>Username <i class="fas fa-caret-down"></i></span>
+          <span> <button className="btn btn-light" style={{borderRadius:"50px",color:"green"}}><i class="fas fa-user"></i></button>{username} <i class="fas fa-caret-down"></i></span>
         </div>
       </div>
     </div>

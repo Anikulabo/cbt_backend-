@@ -16,7 +16,7 @@ const {
 const {
   addscore,
   updatescore,
-  getall,
+  getresults,
 } = require("./controllers/scorecontroller.js");
 const {
   createUser,
@@ -143,7 +143,7 @@ app.put("/api/users/:id", updateUser);
 app.delete("/api/users/:id", deleteUser);
 app.put("/api/questions/:id", updateQuestion);
 app.put("/api/scores/:id", updatescore);
-app.get("/api/scores", getall);
+app.get("/api/scores/:dept", getresults);
 app.post("/api/login", loginuser);
 app.get("/api/download/:dept", notificationForDownload)
 

@@ -13,9 +13,18 @@ export const Main = ({
   displayctrl,
   answers,
   user,
+  total,
+  time
 }) => {
   const [avatarSrc, setAvatarSrc] = useState(null);
- let options = [
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${String(minutes).padStart(2, "0")}:${String(
+      remainingSeconds
+    ).padStart(2, "0")}`;
+  };
+  let options = [
     question.option_a,
     question.option_b,
     question.option_c,
@@ -48,12 +57,6 @@ export const Main = ({
           }}
         >
           <button className="btn btn-light greenborder text-lemon">
-            <i className="fas fa-list" style={{ marginRight: "15px" }}></i>
-            <span style={{ display: "inline-flex", alignItems: "center" }}>
-              Dashboard
-            </span>
-          </button>
-          <button className="btn btn-light greenborder text-lemon">
             <i className="fas fa-book" style={{ marginRight: "15px" }}></i>
             <span style={{ display: "inline-flex", alignItems: "center" }}>
               Subjects
@@ -68,7 +71,7 @@ export const Main = ({
           <button className="btn btn-light greenborder text-lemon">
             <i className="far fa-user" style={{ marginRight: "15px" }}></i>
             <span style={{ display: "inline-flex", alignItems: "center" }}>
-              User Info
+              {user.department}
             </span>
           </button>
           <div className="user bg-lemon text-light">
@@ -97,8 +100,8 @@ export const Main = ({
             className="container text-lemon mt-3"
             style={{ fontWeight: "bolder" }}
           >
-            <span>{"Exam/"+user.activity.subject}</span>
-            <span style={{ marginLeft: "80%" }}>{user.activity.time}</span>
+            <span>{"Exam/" + user.activity.subject}</span>
+            <span style={{ marginLeft: "80%" }}>{formatTime(time)}</span>
           </div>
           <div
             className="container"
@@ -145,7 +148,7 @@ export const Main = ({
                   />
                 </div>
                 <div className="col-md-4 d-flex justify-content-center">
-                  <CameraComponent answers={answers} />
+                  <CameraComponent time={time} total={total} answers={answers} />
                 </div>
               </div>
             </div>

@@ -38,6 +38,22 @@ export const CameraComponent = (props) => {
       }
     };
   }, []);
+  useEffect(() => {
+    if (props.time === 0) {
+      stopCamera();
+    }
+  }, [props.time]);
+  
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject;
+      const tracks = stream.getTracks();
+  
+      tracks.forEach((track) => {
+        track.stop();
+      });
+    }
+  };
   const checkBrightness = () => {
     const check = () => {
       try {
@@ -121,7 +137,8 @@ export const CameraComponent = (props) => {
         Done:
         <span
           style={{
-            color: props.answers.length < 10 ? "red" : "rgb(81, 194, 37)",
+            color:
+              props.answers.length < props.total ? "red" : "rgb(81, 194, 37)",
             marginLeft: "15px",
           }}
         >
@@ -129,8 +146,14 @@ export const CameraComponent = (props) => {
         </span>
       </div>
       <div>
-        Total: <span style={{ marginLeft: "15px" }}>20</span>
+        Total: <span style={{ marginLeft: "15px" }}>{props.total}</span>
       </div>
+      <button
+        className="bg-lemon text-light"
+        style={{ padding: "5px", marginTop: "15px", borderRadius: "5px" }}
+      >
+        Submit
+      </button>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 const fs = require("fs");
-const { Sequelize } = require("sequelize");
+const { Sequelize, where } = require("sequelize");
 const User = require("../models/users.js");
 const path = require("path");
 const { promisify } = require("util");
@@ -35,7 +35,6 @@ exports.createUser = async (req, res) => {
 
     // Save the user object to the database
     user = await User.create(user);
-    res.status(201).json({ message: "User created successfully" });
     let data = await User.findOne({ where: { username } });
     Score.create({ user_id: data.id });
     res.status(201).json({ message: "User is ready to take an exam" });
@@ -92,33 +91,33 @@ exports.notificationForDownload = async (req, res) => {
     // Find the subject for the specified department
     const subject = await Subject.findOne({ where: { department: dept } });
 
-    if (!subject) {
-      return res.status(404).json({ error: "Subject not found for the specified department" });
-    }
-
     // Find all students in the department
-    const studentsInDept = await User.findAll({ where: { department: dept } });
+    if(subject) {
+      const studentsInDept = await User.findAll({
+        where: { department: dept },
+      });
 
-    // Find all test takers who have completed the test for the subject
-    const testTakers = await Score.findAll({
-      where: { status: "done", subject: subject.name },
-    });
- 
-    // Check if the number of test takers matches the number of students in the department
-    if (testTakers.length === studentsInDept.length) {
-      let query =
-        `SELECT users.username, users.image, scores.score FROM users LEFT JOIN scores ON users.id = scores.user_id where users.department='${dept}'`;
-      const results = await User.sequelize.query(query, {
-        type: Sequelize.QueryTypes.SELECT, // specify the query type
+      // Find all test takers who have completed the test for the subject
+      const testTakers = await Score.findAll({
+        where: { status: "done", subject: subject.name },
       });
-      return res.status(201).json({
-        message: `The results for ${subject.name} in ${dept} are now ready for download`,
-         results: results,
-      });
-    } else {
-      return res.status(200).json({
-        message: `Waiting for all students in ${dept} to complete the test for ${subject.name}`,
-      });
+
+      // Check if the number of test takers matches the number of students in the department
+      if (testTakers.length === studentsInDept.length) {
+        let query = `SELECT users.username, users.image, scores.score FROM users LEFT JOIN scores ON users.id = scores.user_id where users.department='${dept}'`;
+        const results = await User.sequelize.query(query, {
+          type: Sequelize.QueryTypes.SELECT, // specify the query type
+        });
+        return res.status(201).json({
+          message: `The results for ${subject.name} in ${dept} are now ready for download`,
+          results: results,
+          subject:subject.name
+        });
+      } else {
+        return res.status(200).json({
+          message: `Waiting for all students in ${dept} to complete the test for ${subject.name}`,
+        });
+      }
     }
   } catch (error) {
     console.error("Error:", error);
@@ -134,28 +133,39 @@ exports.loginuser = async (req, res) => {
       const test = await subject.findOne({
         where: { department: user.department },
       });
+      const alreadydone = await Score.findAll({
+        where: { subject: test.name, status: "done" },
+      });
+      const confirm = alreadydone.find((item) => item.user_id === user.id);
       let questions = null;
-      if (test) {
+      if (test && !confirm) {
         questions = await Question.findAll({
           where: { subject: test.name },
         });
-        res.json({
+        const score = await Score.findOne({ where: { user_id: user.id } });
+        res.status(200).json({
           userdata: user,
           questions: questions,
           subject: test.name,
           time: test.timeAllocated,
+          scoreid: score.id,
         });
-      } else {
-        if (user.department !== "admin") {
-          res.json({
-            userdata: user,
-            questions: "your department is not working for now",
-          });
-        } else {
-          res.json({
-            userdata: user,
-          });
-        }
+      }
+      if (test && confirm) {
+        res.status(201).json({
+          message:
+            "report shows that you've done the test before go to the admin of the site for more information",
+          userdata: user,
+        });
+      }
+      if (!test && user.department !== "admin") {
+        res.status(202).json({
+          message: "you department is not currently having an exam",
+          userdata: user,
+        });
+      }
+      if (user.department === "Admin") {
+        res.json({ userdata: user });
       }
     } else {
       res.status(401).send("Invalid username or password");

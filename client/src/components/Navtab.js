@@ -1,6 +1,27 @@
 import "./top.css";
-import table from "./table";
+import { useSelector  } from "react-redux";
 export const Easynavigator = ({ num, show,action,answered }) => {
+  let table=[];
+  let questions=useSelector((state)=>state.items.biodata.activity.questions)
+  let tr=0;
+  let totalrow=questions.length/10;
+  for (let i = 0; i < totalrow; i++) {
+      table.push([]);
+    }
+    while (tr < table.length) {
+      if (tr === 0) {
+        for (let td = 0; td < 10; td++) {
+          table[tr].push(td+1);
+        }
+      } else {
+        let prev = table[tr - 1];
+        let prevlast = prev[prev.length - 1];
+        for (let td = prevlast; td < prevlast + 10; td++) {
+          table[tr].push(td+1);
+        }
+      }
+    tr++;
+    }
   return (
     <div
       className="container-fluid d-flex align-items-center justify-content-end vh-100 mr-4"
@@ -29,7 +50,7 @@ export const Easynavigator = ({ num, show,action,answered }) => {
                 {" "}
                 {tr.map((td, cellIndex) => {
                   const questionIndex = answered.findIndex(
-                    (item) => item.id === td - 1
+                    (item) => item.num === td - 1
                   );
                   return (
                     <td

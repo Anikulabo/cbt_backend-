@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Questionupload } from "./uploadmodal";
 export const Adminwelcome = (props) => {
   const [avatarSrc, setAvatarSrc] = useState(null);
   useEffect(() => {
@@ -26,11 +27,31 @@ export const Adminwelcome = (props) => {
         </div>
         <div className="col-3">
           <div className="d-flex justify-content-end">
-            <i
-              className="fa fa-bell"
-              style={{ marginTop: "5px", fontSize: "2rem" }}
-            onClick={()=>props.shownotification()}
-            ></i>
+            <div style={{ position: "relative", display: "inline-block" }}>
+              <div
+                style={{
+                  position: "absolute",
+                  top: "-5px",
+                  right: "-5px",
+                  backgroundColor: "red",
+                  width: "20px",
+                  height: "20px",
+                  borderRadius: "50%",
+                  display: props.notifications.length <= 0 ? "none" : "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  color: "white",
+                  fontSize: "1rem",
+                }}
+              >
+                {props.notifications.length}
+              </div>
+              <i
+                className="fa fa-bell"
+                style={{ marginTop: "5px", fontSize: "2rem" }}
+                onClick={() => props.shownotification("resultsopen")}
+              ></i>
+            </div>
             <img
               src={avatarSrc}
               alt="it should show an avatar"
@@ -42,7 +63,7 @@ export const Adminwelcome = (props) => {
                 border: "2.5px solid white",
               }}
             />
-            <span style={{marginLeft:"5px",fontWeight:"bolder"}}>
+            <span style={{ marginLeft: "5px", fontWeight: "bolder" }}>
               {props.name}
               <br />
               <span>Admin</span>

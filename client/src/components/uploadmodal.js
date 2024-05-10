@@ -1,9 +1,12 @@
 import { Children } from "react";
 import { Modal, Button } from "react-bootstrap";
 export const Questionupload = (props) => {
- const children=Children.toArray(props.children)
+  const children = Children.toArray(props.children);
   return (
-    <Modal show={props.showModal} onHide={() => props.actions.control("close")}>
+    <Modal
+      show={props.showModal}
+      onHide={() => props.actions.control(props.footer.modalcontrolled+"close")}
+    >
       <Modal.Header closeButton>
         <Modal.Title>
           <center>
@@ -12,26 +15,30 @@ export const Questionupload = (props) => {
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        {children.map((child,index)=><span key={index}>{child}</span>)}
+        {children.map((child, index) => (
+          <span key={index}>{child}</span>
+        ))}
       </Modal.Body>
       <Modal.Footer>
         <Button
           variant="secondary"
           onClick={() => {
-            props.actions.control("close");
+            props.actions.control(props.footer.modalcontrolled+"close");
           }}
         >
           {props.footer.close}
         </Button>
-        <Button
-          variant="primary"
-          onClick={() => {
-            props.actions.mainfunction();
-            props.actions.control("close");
-          }}
-        >
-          {props.footer.mainfunction}
-        </Button>
+        {props.actions.mainfunction && (
+          <Button
+            variant="primary"
+            onClick={() => {
+              props.actions.mainfunction();
+              props.actions.control(props.footer.modalcontrolled+"close");
+            }}
+          >
+            {props.footer.mainfunction}
+          </Button>
+        )}
       </Modal.Footer>
     </Modal>
   );
