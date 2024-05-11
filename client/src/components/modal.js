@@ -1,5 +1,6 @@
 import { Modal, Button } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
+import "./top.css"
 export const RuleAlert = ({ showModal, handleClose, onStartTest }) => {
   return (
     <Modal show={showModal} onHide={handleClose}>
@@ -25,6 +26,7 @@ export const RuleAlert = ({ showModal, handleClose, onStartTest }) => {
       <Modal.Footer>
         <Button
           variant="primary"
+          style={{backgroundColor:"rgb(81, 194, 37)"}}
           onClick={() => {
             handleClose();
             onStartTest();

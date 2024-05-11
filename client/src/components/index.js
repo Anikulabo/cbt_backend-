@@ -11,6 +11,8 @@ import { Adminwelcome } from "./adminwelcome";
 import { Admincard } from "./admincard";
 import { PieChart } from "./piechart";
 import { Questionupload } from "./uploadmodal";
+import { RuleAlert } from "./modal";
+import { WatermarkTable } from "./watermarktable";
 export {
   Welcome,
   Main,
@@ -23,5 +25,7 @@ export {
   Adminwelcome,
   Admincard,
   PieChart,
-  Questionupload
+  Questionupload,
+  RuleAlert,
+  WatermarkTable
 };

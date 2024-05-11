@@ -3,6 +3,7 @@ const { Sequelize, where } = require("sequelize");
 const User = require("../models/users.js");
 const path = require("path");
 const { promisify } = require("util");
+const QRCode = require("qrcode");
 const subject = require("../models/subjects.js");
 const Question = require("../models/questions.js");
 const Score = require("../models/scores.js");
@@ -92,7 +93,7 @@ exports.notificationForDownload = async (req, res) => {
     const subject = await Subject.findOne({ where: { department: dept } });
 
     // Find all students in the department
-    if(subject) {
+    if (subject) {
       const studentsInDept = await User.findAll({
         where: { department: dept },
       });
@@ -108,10 +109,13 @@ exports.notificationForDownload = async (req, res) => {
         const results = await User.sequelize.query(query, {
           type: Sequelize.QueryTypes.SELECT, // specify the query type
         });
+        const qrText = `This is the original ${subject.name} result`;
+        const qrImageData = await QRCode.toDataURL(qrText);
         return res.status(201).json({
           message: `The results for ${subject.name} in ${dept} are now ready for download`,
           results: results,
-          subject:subject.name
+          subject: subject.name,
+          qrCodeImage: qrImageData, // Include QR code image data in the response
         });
       } else {
         return res.status(200).json({
@@ -130,41 +134,43 @@ exports.loginuser = async (req, res) => {
   try {
     const user = await User.findOne({ where: { username } });
     if (user && password === user.password) {
-      const test = await subject.findOne({
-        where: { department: user.department },
-      });
-      const alreadydone = await Score.findAll({
-        where: { subject: test.name, status: "done" },
-      });
-      const confirm = alreadydone.find((item) => item.user_id === user.id);
-      let questions = null;
-      if (test && !confirm) {
-        questions = await Question.findAll({
-          where: { subject: test.name },
+      if (user.department !== "admin") {
+        const test = await subject.findOne({
+          where: { department: user.department },
         });
-        const score = await Score.findOne({ where: { user_id: user.id } });
-        res.status(200).json({
-          userdata: user,
-          questions: questions,
-          subject: test.name,
-          time: test.timeAllocated,
-          scoreid: score.id,
-        });
-      }
-      if (test && confirm) {
-        res.status(201).json({
-          message:
-            "report shows that you've done the test before go to the admin of the site for more information",
-          userdata: user,
-        });
-      }
-      if (!test && user.department !== "admin") {
-        res.status(202).json({
-          message: "you department is not currently having an exam",
-          userdata: user,
-        });
-      }
-      if (user.department === "Admin") {
+        
+        if (test) {
+          const alreadydone = await Score.findAll({
+            where: { subject: test.name, status: "done" },
+          });
+          const confirm = alreadydone.find((item) => item.user_id === user.id);
+          if(!confirm){
+            const  questions = await Question.findAll({
+              where: { subject: test.name },
+            });
+            const score = await Score.findOne({ where: { user_id: user.id } });
+            res.status(200).json({
+              userdata: user,
+              questions: questions,
+              subject: test.name,
+              time: test.timeAllocated,
+              scoreid: score.id,
+            });
+          }else{
+            res.status(201).json({
+              message:
+                "report shows that you've done the test before go to the admin of the site for more information",
+              userdata: user,
+            })
+          }
+        }
+        else {
+          res.status(202).json({
+            message: "you department is not currently having an exam",
+            userdata: user,
+          });
+        }
+      } else {
         res.json({ userdata: user });
       }
     } else {

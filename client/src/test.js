@@ -7,13 +7,14 @@ import { useNavigate } from "react-router-dom";
 import backgroundImage from "./unaab.jpeg";
 import { changenum, shownav, updateAnswered, destroy } from "./action";
 import axios from "axios";
+import { RuleAlert } from "./components";
 function Test(props) {
   let num = useSelector((state) => state.items.number);
   let tabledisplay = useSelector((state) => state.items.showtable);
   let answered = useSelector((state) => state.items.answered);
   let data = useSelector((state) => state.items.biodata);
   let questions = data.activity.questions;
-  const [testStarted, setTestStarted] = useState(true);
+  const [testStarted, setTestStarted] = useState(false);
   let time = data.activity.time.split(":");
   let hour = parseInt(time[0]) * 3600;
   let minutes = parseInt(time[1]) * 60;
@@ -25,6 +26,11 @@ function Test(props) {
     next: "block",
     previous: "none",
   });
+  const [showAlert, setShowAlert] = useState(true);
+  const handleClose = () => setShowAlert(false);
+  const handleStartTest = () => {
+    setTestStarted(true);
+  };
   const handleTimerComplete = async (ans, guide) => {
     const correctAnswers = ans
       .map((an) => {
@@ -37,8 +43,8 @@ function Test(props) {
         }
       })
       .filter((answer) => answer !== null);
-    const id=data.scoreid
-      const response = await axios.put(`http://localhost:3001/api/scores/${id}`, {
+    const id = data.scoreid;
+    const response = await axios.put(`http://localhost:3001/api/scores/${id}`, {
       score: correctAnswers.length,
       status: "done",
       subject: data.activity.subject,
@@ -91,7 +97,7 @@ function Test(props) {
   }*/
   }, [num, answered, questions, totaltime]);
   const move = (event) => {
-    alert(data.scoreid)
+    alert(data.scoreid);
     if (!isNaN(event.target.innerHTML)) {
       dispatch(changenum(num, event.target.innerHTML, questions.length));
     }
@@ -127,6 +133,11 @@ function Test(props) {
         backgroundAttachment: "fixed",
       }}
     >
+      <RuleAlert
+        showModal={showAlert}
+        handleClose={handleClose}
+        onStartTest={handleStartTest}
+      />
       <Welcome username={data.username} />
       <Main
         question={questions[num]}

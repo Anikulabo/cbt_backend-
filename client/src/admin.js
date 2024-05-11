@@ -5,6 +5,7 @@ import {
   Admincard,
   PieChart,
   Questionupload,
+  WatermarkTable,
 } from "./components";
 import { changeVariable } from "./action";
 import { useState, useEffect } from "react";
@@ -25,6 +26,7 @@ export const Admin = () => {
     subjectview: false,
     backend: false,
     resultview: false,
+    resulttable: false,
   });
   const dispatch = useDispatch();
   const handleFileChange = (event) => {
@@ -81,6 +83,12 @@ export const Admin = () => {
     if (type === "resultsclose") {
       setShowModal({ ...showModal, resultview: false });
     }
+    if (type === "tableopen") {
+      setShowModal({ ...showModal, resulttable: true });
+    }
+    if (type === "tableclose") {
+      setShowModal({ ...showModal, resulttable: false });
+    }
   };
   const viewresult = async (event) => {
     const dept = event.target.id;
@@ -119,16 +127,16 @@ export const Admin = () => {
               `http://localhost:3001/api/download/${dept}`
             );
             if (downloadResponse.status === 201) {
-              console.log(downloadResponse.data.message)
+              console.log(downloadResponse.data.message);
               notifications.push({
                 dept: dept,
                 message: downloadResponse.data.message,
-                subject:downloadResponse.data.subject
+                subject: downloadResponse.data.subject,
               });
             }
+            console.log(notifications);
             setNotification(notifications);
           }
-        console.log(notification);
         } else {
           throw new Error("Failed to fetch users data");
         }
@@ -145,7 +153,7 @@ export const Admin = () => {
 
     // Cleanup interval on component unmount
     return () => clearInterval(intervalId);
-  }, []); // Empty dependency array to run effect only once on mount
+  }, []);
 
   const pieChartData = {
     science: {
@@ -168,7 +176,11 @@ export const Admin = () => {
           showModal={showModal.resultview}
           actions={{ control: modalctrl }}
           title="Notifications"
-          footer={{ close: "close", mainfunction: "upload",modalcontrolled:"results" }}
+          footer={{
+            close: "close",
+            mainfunction: "upload",
+            modalcontrolled: "results",
+          }}
         >
           {notification.map((content, index) => (
             <div key={index}>
@@ -190,7 +202,11 @@ export const Admin = () => {
           control: modalctrl,
           mainfunction: handleUpload,
         }}
-        footer={{ close: "close", mainfunction: "upload",modalcontrolled:"view" }}
+        footer={{
+          close: "close",
+          mainfunction: "upload",
+          modalcontrolled: "view",
+        }}
         title="Upload a Word document"
       >
         <input
@@ -295,6 +311,7 @@ export const Admin = () => {
             </div>
             <div className="row">
               <PieChart data={pieChartData} tabledata={data} />
+              <WatermarkTable />
             </div>
           </div>
         </div>
