@@ -1,17 +1,9 @@
 import React from 'react';
 import QRCode from 'qrcode.react'; // Assuming you have a QRCode library installed
 import 'bootstrap/dist/css/bootstrap.min.css'; // Import Bootstrap CSS
-import watermark from "./img/unaab.jpeg"
+import watermark from "./img/unaab.jpeg";
 import avatar from "./img/Avatart1.jpg";
-const data = [
-  {  username: "john_smith", score: 80 },
-  {  username: "kevin_jones", score: 80 },
-  {  username: "emily_parker", score: 80 },
-  {  username: "michael_adams", score: 80 },
-  {  username: "kelvin", score: 50 }
-];
-
-export const WatermarkTable = () => {
+export const WatermarkTable = (props) => {
   return (
     <div style={{ position: 'relative' }}>
       {/* Watermark image */}
@@ -24,9 +16,9 @@ export const WatermarkTable = () => {
         pointerEvents: 'none' // Prevent interaction with the watermark
       }} />
 
+      <center>{`Result of ${props.subject} for ${props.dept} department`}</center>
       {/* Table with Bootstrap styling */}
-      <table className="table table-striped" style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <caption>Results of Physics for Science Department</caption>
+      <table className="table table-striped" style={{ width: '100%', borderCollapse: 'collapse', marginBottom:"50px"}}>
         <thead>
           <tr>
             <th>Image</th>
@@ -35,7 +27,7 @@ export const WatermarkTable = () => {
           </tr>
         </thead>
         <tbody>
-          {data.map((entry, index) => (
+          {props.data.map((entry, index) => (
             <tr key={index}>
               <td>
                 <img src={avatar} alt={entry.username} width="50" />
@@ -48,11 +40,9 @@ export const WatermarkTable = () => {
       </table>
 
       {/* QR code image */}
-      <div style={{ position: 'absolute', bottom: 10, right: 10 }}>
-        <QRCode value="this is the original physics result" size={64} />
+      <div style={{ position: 'absolute', bottom: '-110px', right: '20px' }}>
+        <QRCode value="this is the original physics result" size={100} />
       </div>
     </div>
   );
 };
-
-

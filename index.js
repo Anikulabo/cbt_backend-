@@ -30,7 +30,7 @@ const app = express();
 const upload = multer({ dest: 'uploads/' });  
 app.use(express.json());
 app.post("/api/questions", upload.single('file'),async (req, res) => {
-  try {
+  try { 
     // if (!req.file) {
     //   return res.status(400).json({ error: 'No file uploaded' });
     // }
@@ -92,10 +92,6 @@ app.post("/api/questions", upload.single('file'),async (req, res) => {
     
         // Split content by questions
         const questionBlocks = content.value.split("\n\n");
-    
-        // Initialize an array to store formatted questions
-        const formattedQuestions = [];
-    
         // Process each question block
         questionBlocks.forEach((block) => {
           // Split block into lines
@@ -142,7 +138,7 @@ app.post("/api/users", upload.single("image"), createUser);
 app.put("/api/users/:id", updateUser);
 app.delete("/api/users/:id", deleteUser);
 app.put("/api/questions/:id", updateQuestion);
-app.put("/api/scores/:id", updatescore);
+app.put("/api/scores/:id/:course", updatescore);
 app.get("/api/scores/:dept", getresults);
 app.post("/api/login", loginuser);
 app.get("/api/download/:dept", notificationForDownload)

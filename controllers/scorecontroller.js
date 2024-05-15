@@ -27,11 +27,21 @@ exports.getresults = async (req, res) => {
 
 exports.updatescore = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id, course } = req.params;
     const { score, status, subject } = req.body;
-    await Score.update({ score, status, subject }, { where: { id } });
-    res.json({ message: "Data updated successfully" });
+    if (id) {
+      // Update based on id
+      await Score.update({ score, status, subject }, { where: { id } });
+      res.json({ message: "Data updated successfully based on id" });
+    } else if (course) {
+      // Update based on course
+      await Score.update({ score, status }, { where: { subject: course } });
+      res.json({ message: "Data updated successfully based on course" });
+    } else {
+      res.status(400).json({ message: "Neither id nor course provided" });
+    }    
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+

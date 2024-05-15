@@ -13,10 +13,10 @@ const Score = sequelize.define(
       user_id:{
         type:DataTypes.INTEGER,
         allowNull:false,
-        unique:true
+        unique:false
       },
-     subject:{
-        type:DataTypes.STRING,
+     subject_id:{
+        type:DataTypes.INTEGER,
         allowNull:false,
         unique:false
      },
@@ -25,8 +25,13 @@ const Score = sequelize.define(
         allowNull:true,
      },
      status:{
-      type:DataTypes.STRING,
+      type:DataTypes.INTEGER,
       allowNull:false,
+     },
+     session_id:{
+      type:DataTypes.STRING,
+      allowNull:false
+
      } 
     },
     {

@@ -19,7 +19,7 @@ export const Questionupload = (props) => {
           <span key={index}>{child}</span>
         ))}
       </Modal.Body>
-      <Modal.Footer>
+      <Modal.Footer style={{marginTop:"59px"}}>
         <Button
           variant="secondary"
           onClick={() => {

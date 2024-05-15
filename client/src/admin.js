@@ -1,5 +1,7 @@
 import React from "react";
 import unaabImage from "./unaab.jpeg"; // Importing the image
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import {
   Adminwelcome,
   Admincard,
@@ -21,7 +23,7 @@ export const Admin = () => {
   const [notification, setNotification] = useState([]);
   const [data, setData] = useState(null);
   const [file, setFile] = useState(null);
-  const [results, setResults] = useState(null);
+  const [results, setResults] = useState({ result: "", dept: "", subject: "" });
   const [showModal, setShowModal] = useState({
     subjectview: false,
     backend: false,
@@ -90,15 +92,28 @@ export const Admin = () => {
       setShowModal({ ...showModal, resulttable: false });
     }
   };
+  const downloadPdf = async() => {
+    const input = document.getElementById("pdf-content");
+    html2canvas(input).then((canvas) => {
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF();
+      const imgHeight = (canvas.height * 208) / canvas.width;
+      pdf.addImage(imgData, 0, 0, 208, imgHeight);
+      pdf.save("download.pdf");
+    });
+  };
   const viewresult = async (event) => {
-    const dept = event.target.id;
+    const all = event.target.id.split("/");
+    const dept = all[0];
     try {
       const results = await axios.get(
         `http://localhost:3001/api/scores/${dept}`
       );
       if (results.status === 200) {
-        setResults(results.data);
+        setResults({ result: results.data, dept: dept, subject: all[1] });
         console.log(results.data);
+        modalctrl("tableopen");
+        modalctrl("resultsclose");
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -107,34 +122,36 @@ export const Admin = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch users data
         const usersResponse = await axios.get(
           "http://localhost:3001/api/users"
         );
         let depts = [];
         let notifications = [];
+
         if (usersResponse.status >= 200 && usersResponse.status < 300) {
           const usersData = await usersResponse.data;
+
           for (const data of usersData) {
             if (depts.indexOf(data.department) < 0) {
               depts.push(data.department);
             }
           }
+
           setData(usersData);
+
           for (const dept of depts) {
-            console.log(dept);
             const downloadResponse = await axios.get(
               `http://localhost:3001/api/download/${dept}`
             );
+
             if (downloadResponse.status === 201) {
-              console.log(downloadResponse.data.message);
               notifications.push({
                 dept: dept,
                 message: downloadResponse.data.message,
                 subject: downloadResponse.data.subject,
               });
             }
-            console.log(notifications);
+
             setNotification(notifications);
           }
         } else {
@@ -153,7 +170,7 @@ export const Admin = () => {
 
     // Cleanup interval on component unmount
     return () => clearInterval(intervalId);
-  }, []);
+  }, []); // Empty dependency array to run only once on mount
 
   const pieChartData = {
     science: {
@@ -186,7 +203,7 @@ export const Admin = () => {
             <div key={index}>
               {content.message}
               <button
-                id={content.dept}
+                id={content.dept + "/" + content.subject}
                 className="btn btn-primary"
                 onClick={(event) => viewresult(event)}
               >
@@ -196,6 +213,23 @@ export const Admin = () => {
           ))}
         </Questionupload>
       )}
+      <Questionupload
+        showModal={showModal.resulttable}
+        actions={{ control: modalctrl }}
+        title="download result"
+        footer={{
+          close: "close",
+          modalcontrolled: "table",
+        }}
+      >
+        {results.result && (
+          <WatermarkTable
+            data={results.result}
+            subject={results.subject}
+            dept={results.dept}
+          />
+        )}
+      </Questionupload>
       <Questionupload
         showModal={showModal.subjectview}
         actions={{
@@ -311,7 +345,6 @@ export const Admin = () => {
             </div>
             <div className="row">
               <PieChart data={pieChartData} tabledata={data} />
-              <WatermarkTable />
             </div>
           </div>
         </div>

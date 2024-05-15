@@ -11,6 +11,10 @@ const Question = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
+    subject_id:{
+      type:DataTypes.INTEGER,
+      allowNull:false
+    },
     question: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -35,8 +39,8 @@ const Question = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    subject:{
-      type:DataTypes.STRING,
+    session_id:{
+      type:DataTypes.INTEGER,
       allowNull:false
     }
   },
