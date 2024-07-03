@@ -1,7 +1,7 @@
-const { Op, Sequelize, where } = require("sequelize");
-const { Categories } = require("../models/categories");
-const { Users } = require("../models/users");
-const { Subjects } = require("../models/subjects");
+const { Op, Sequelize } = require("sequelize");
+const  Categories  = require("../models/categories");
+const Registration=require('../models/registration')
+const  Subjects  = require("../models/subjects");
 const Class = require("../models/class");
 const {Departments}=require("../models/departments")
 exports.addcategory = async (req, res) => {
@@ -37,7 +37,7 @@ exports.updatecategory = async (req, res) => {
 exports.deletecategory = async (req, res) => {
     const { id } = req.params;
     try {
-      const users = await Users.findAll({ where: { Categories_id: id } });
+      const users = await Registration.findAll({ where: { Categories_id: id } });
       const Classes = await Class.findAll({ where: { Categories_id: id } });
       const Subject = await Subjects.findAll({ where: { Categories_id: id } });
       const Department=await Departments.findAll({ where: { Categories_id: id } })

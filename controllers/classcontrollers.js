@@ -1,5 +1,7 @@
 const Class = require("../models/class");
 const Category = require("../models/categories");
+const Score = require("../models/scores");
+const { objectreducer } = require("./jwtgeneration");
 const Teachers = require("../models/teachers");
 const notifyauser = require("./sessioncontrollers");
 const { Sequelize } = require("sequelize");
@@ -82,23 +84,71 @@ exports.addclass = async (req, res) => {
 };
 exports.editclass = async (req, res) => {
   const { id } = req.params;
-  const { name } = req.body;
+  const { year, category_id, department_id, name, teacherid } = req.body;
   try {
-    await Class.update({ class: name }, { id });
-    return res.status(201).json({ message: "class successfully updated" });
+    const transaction = await sequelize.transaction();
+    try {
+      const intialdetail = await Class.findOne({ where: { id } }, transaction);
+      let reducedobject = objectreducer(intialdetail, {
+        year,
+        category_id,
+        department_id,
+        name,
+        teacherid,
+      });
+      await Class.update(
+        reducedobject.newobject,
+        { where: { id } },
+        transaction
+      );
+      await transaction.commit();
+      return res.status(201).json({
+        message: `fields ${reducedobject.changeditems.join(
+          ", "
+        )} of class  has been successfully updated`,
+      });
+    } catch (error) {
+      await transaction.rollback();
+      console.error("error:", error);
+      res.status(500).json({ message: "error during transaction" });
+    }
   } catch (error) {
     console.error("error:", error);
-    res.status(500).json({ error: "internal server error" });
+    res.status(500).json({
+      message: "unable to start transaction probably an internal server error",
+    });
   }
 };
 exports.deleteclass = async (req, res) => {
   const { id } = req.params;
   try {
-    await Class.destroy({ where: { id } });
-    return res.status(201).json({ message: "session successfully deleted" });
+    const transaction = await sequelize.transaction();
+    try {
+      let pastrecord = await Score.findOne(
+        { where: { class_id: id } },
+        transaction
+      );
+      if (pastrecord) {
+        await transaction.rollback();
+        return res
+          .status(400)
+          .json({
+            message:
+              "class already have some records so it can't be deleted you can only update it",
+          });
+      }else{
+        await Class.destroy({ where: { id } },transaction);
+        await transaction.commit()
+        return res.status(201).json({ message: "class successfully deleted" })        
+      }
+    } catch (error) {
+      await transaction.rollback();
+      console.error("error:", error);
+      res.status(500).json({ message: "error during transaction " });
+    }
   } catch (error) {
     console.error("error:", error);
-    res.status(500).json({ error: "internal server error" });
+    res.status(500).json({ message: "internal server error" });
   }
 };
 exports.viewclasses = async (req, res) => {

@@ -1,4 +1,4 @@
-/*const express = require("express");
+const express = require("express");
 const registrationroutes = express.Router();
 const {
   register,
@@ -12,9 +12,21 @@ const {
   notifyallparties 
 } = require("../controllers/jwtgeneration");
 const Registration = require("../models/registration");
-const Class = require("../models/class");
+const Subjects=require("../models/subjects");
+const Sessions = require("../models/session");
+const Categories=require("../models/categories");
+const Activities=require("../models/activities");
+const { sequelize } = require("../models");
+const models = {
+  Categories: Categories,
+  Subjects: Subjects,
+  Sessions: Sessions,
+  Registration: Registration,
+  Activities: Activities,
+  sequelize: sequelize,
+};
 const registerWithDependencies = (req, res) => {
-  register(req, res, { assignClass, notifyallparties });
+  register(req, res, { assignClass, notifyallparties,models });
 };
 // Register a student (accessible to admins only)
 registrationroutes.post("/", adminauthentication, registerWithDependencies);
@@ -25,4 +37,4 @@ registrationroutes.put("/:id", adminauthentication, updateregister);
 // View registration details (accessible to general/all users)
 registrationroutes.get("/:class_id/:subject_id", generalauthentication, viewregister);
 
-module.exports = registrationroutes;*/
+module.exports = registrationroutes;

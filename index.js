@@ -1,17 +1,17 @@
+const dotenv = require('dotenv');
+dotenv.config();
 const express = require("express");
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const path = require('path');  
 const port=process.env.PORT||3001;
-const dotenv = require('dotenv');
-dotenv.config();
 const app = express();
 const server = createServer(app);
 const io =new  Server(server);
 const bodyParser = require('body-parser');
 const notificationroutes=require('./apiroutes/notificationroute');
 ///const {adminauthentication}=require('./controllers/jwtgeneration');
-//const registrationroutes=require('./apiroutes/registratioroute');
+const registrationroutes=require('./apiroutes/registratioroute');
 //const teachersroute=require('./apiroutes/teachersroute');
 const userroutes=require('./apiroutes/userroutes');
 // socket connection
@@ -38,7 +38,7 @@ io.on('connection', (socket) => {
 
 app.use(express.json()); 
 app.use(bodyParser.urlencoded({ extended: true }));
-//app.use('/registration',registrationroutes);
+app.use('/registration',registrationroutes);
 //app.use('/teacher',adminauthentication,teachersroute);
 app.use('/notifications',notificationroutes);
 app.use('/user',userroutes);
