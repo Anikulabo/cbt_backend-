@@ -5,6 +5,7 @@ const Notifications = require("../models/notification.js");
 const Class = require("../models/class.js");
 const io = require("../index.js");
 const jwt = require("jsonwebtoken");
+const jwtSecretKey=process.env.JWT_SECRET_KEY
 exports.generateToken = (mainpayload) => {
   const { userid, username, role } = mainpayload;
   let jwtSecretKey = process.env.JWT_SECRET_KEY;
@@ -98,16 +99,13 @@ exports.assignClass = async (main) => {
 };
 exports.generalauthentication = (req, res, next) => {
   const token = req.header("Authorization");
-
   if (!token) {
     return res.status(401).json({ error: "Unauthorized" });
   }
-
-  jwt.verify(token.split(" ")[1], secretKey, (err, payload) => {
+  jwt.verify(token.split(" ")[1], jwtSecretKey, (err, payload) => {
     if (err) {
       return res.status(403).json({ error: "Invalid or expired token" });
     }
-
     req.user = payload;
     next();
   });
@@ -119,7 +117,7 @@ exports.adminauthentication = (req, res, next) => {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  jwt.verify(token.split(" ")[1], secretKey, (err, payload) => {
+  jwt.verify(token.split(" ")[1], jwtSecretKey, (err, payload) => {
     if (err) {
       return res.status(403).json({ error: "Invalid or expired token" });
     }

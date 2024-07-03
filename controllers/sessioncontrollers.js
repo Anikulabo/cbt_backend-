@@ -10,7 +10,7 @@ const { assignClass } = require("./jwtgeneration");
 const Activities = require("../models/activities");
 const Class = require("../models/class");
 const Score = require("../models/scores");
-const {typechecker}=require('./jwtgeneration');
+const { typechecker } = require("./jwtgeneration");
 const Notifications = require("../models/notification");
 exports.notifyauser = async (obj) => {
   let expectedkeys = [
@@ -22,8 +22,8 @@ exports.notifyauser = async (obj) => {
     { key: "roleOfrecipient", type: "number" },
   ];
   // to validate types and some other checks
-  const check=typechecker(obj,expectedkeys)
-  if(Array.isArray(check)){
+  const check = typechecker(obj, expectedkeys);
+  if (Array.isArray(check)) {
     const {
       description, // should be a striing
       performed_by, // should be a number :id of the performer
@@ -95,7 +95,6 @@ exports.addsession = async (req, res) => {
           if (user.year < category.year) {
             // Increase the year of the student due to new session
             const newYear = user.year + 1;
-
             // Assign a new class to the student
             const chosenClass = assignClass({
               cate: user.category_id,
@@ -128,7 +127,7 @@ exports.addsession = async (req, res) => {
             }
           } else {
             await Registration.update(
-              { year: 0 },
+              { year: 0, class_id: 0 },
               { where: { id: user.id } },
               { transaction }
             );

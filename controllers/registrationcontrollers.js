@@ -200,8 +200,6 @@ exports.viewregister = async (req, res) => {
         }
       }
       // to view unadmitted student
-      if (class_id === 0) {
-      }
       if (students.length > 0) {
         await transaction.commit();
         return res.status(200).json({ data: students });
