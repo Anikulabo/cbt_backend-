@@ -1,183 +1,286 @@
-const fs = require("fs");
-const { Sequelize, where } = require("sequelize");
-const User = require("../models/users.js");
-const path = require("path");
-const { promisify } = require("util");
-const QRCode = require("qrcode");
-const subject = require("../models/subjects.js");
-const Question = require("../models/questions.js");
-const Score = require("../models/scores.js");
-const Subject = require("../models/subjects.js");
-const writeFileAsync = promisify(fs.writeFile);
-exports.createUser = async (req, res) => {
+const { generateToken } = require("./jwtgeneration");
+const { sequelize } = require("../models");
+const Registration = require("../models/registration");
+const Registeredcourses = require("../models/registeredcourses.");
+const Teachers = require("../models/teachers");
+const TestControl = require("../models/testcontrol");
+const Sessions = require("../models/session");
+const Score = require("../models/scores");
+const Users = require("../models/users");
+const bcrypt = require("bcrypt");
+const Subjects = require("../models/subjects");
+exports.loginuser = async (req, res) => {
+  const { regno, password } = req.body;
+
   try {
-    const { username, password, department } = req.body;
-    // Check if the username already exists in the database
-    const existingUser = await User.findOne({ where: { username } });
-    if (existingUser) {
-      return res.status(400).json({ error: "Username already taken" });
-    }
-    let user = { username, password, department };
-    // Check if an image was uploaded
-    if (req.file) {
-      const imageData = req.file.buffer; // Access file data from req.file.buffer
-      const imageName = `${username}.jpg`; // Generate a unique name for the image
-      const imagePath = path.join(
-        __dirname,
-        "../client/src/components/img",
-        imageName
-      ); // Path to save the image
-      // Write the image data to the file
-      await writeFileAsync(imagePath, imageData, "base64");
+    // Attempt to find the user in the database
+    const detail = await Users.findOne({ where: { regNo: regno } });
 
-      // Attach the image path to the user object
-      user.image = username;
+    // Check if user exists
+    if (!detail) {
+      return res.status(400).json({ message: "there is no such username" });
     }
 
-    // Save the user object to the database
-    user = await User.create(user);
-    let data = await User.findOne({ where: { username } });
-    Score.create({ user_id: data.id });
-    res.status(201).json({ message: "User is ready to take an exam" });
+    // Check if the password matches
+    const isMatch = await bcrypt.compare(password, detail.password);
+    // this is for cass where the password was encrypted and when it wasn't encrypted before being stored in the database
+    if (isMatch || password === detail.password) {
+      //generation of token for the user
+      const payload = {
+        userid: detail.id,
+        username: detail.regNo,
+        role: detail.role,
+      };
+      const token = generateToken(payload);
+      return res
+        .status(200)
+        .json({ message: "login successfully", token: token });
+    } else {
+      // Handle incorrect password case
+      return res.status(401).json({ message: "incorrect password" });
+    }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("error:", error);
+    return res.status(500).json({ message: "internal server error" });
   }
 };
-exports.getUsers = async (req, res) => {
+
+exports.cbtlogin = async (req, res) => {
+  const { regNo, fname, session_id } = req.body;
+  const query = `
+    SELECT 
+      subjects.id as subject_id,
+      category_id,
+      department_id,
+      name,
+      compulsory,
+      description,
+      duration,
+      type 
+    FROM subjects 
+    LEFT JOIN testcontrol 
+    ON subjects.id = testcontrol.subject_id 
+    WHERE testcontrol.session_id = :session_id 
+    AND testcontrol.status = 1`;
+  // to intiate a transaction
+  const transaction = await sequelize.transaction();
   try {
-    // Construct the SQL query
-    let query =
-      "SELECT scores.id,users.username, users.department, users.image, scores.subject, scores.status FROM users LEFT JOIN scores ON users.id = scores.user_id where users.department!='admin'";
-    // Execute the query
-    const results = await User.sequelize.query(query, {
-      type: Sequelize.QueryTypes.SELECT, // specify the query type
+    // to get the student's detail
+    const Student = await Registration.findOne(
+      { where: { regNo } },
+      { transaction }
+    );
+    // to get the current's session detail
+    const session = await Sessions.findOne(
+      { where: { id: session_id } },
+      { transaction }
+    );
+    // if student is not found respond with error
+    if (!Student) {
+      await transaction.rollback();
+      return res
+        .status(404)
+        .json({ message: "There is no such student in our database" });
+    }
+    // where firstname don't match
+    if (Student.first_name !== fname) {
+      await transaction.rollback();
+      return res.status(400).json({ message: "First name does not match" });
+    }
+    // to get all active exams for the session
+    const alltest = await TestControl.sequelize.query(query, {
+      type: sequelize.QueryTypes.SELECT,
+      replacements: { session_id },
+      transaction,
     });
-
-    // Send the fetched user data back to the client as JSON
-    res.json(results);
-  } catch (error) {
-    // Handle any errors
-    console.error("Error executing query:", error);
-    // Send an error response back to the client
-    res
-      .status(500)
-      .json({ error: "An error occurred while fetching user data." });
-  }
-};
-exports.updateUser = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { username, password, status } = req.body;
-    await User.update({ username, password, status }, { where: { id } });
-    res.json({ message: "User updated successfully" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-exports.deleteUser = async (req, res) => {
-  try {
-    const { id } = req.params;
-    await User.destroy({ where: { id } });
-    res.json({ message: "User deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-// Assume you have imported the necessary modules and models
-
-exports.notificationForDownload = async (req, res) => {
-  try {
-    const { dept } = req.params; // Access query parameters instead of body
-
-    // Find the subject for the specified department
-    const subject = await Subject.findOne({ where: { department: dept } });
-
-    // Find all students in the department
-    if (subject) {
-      const studentsInDept = await User.findAll({
-        where: { department: dept },
+    // when there's no active exams
+    if (alltest.length === 0) {
+      await transaction.rollback();
+      return res
+        .status(404)
+        .json({ message: "There is no test yet for this current session" });
+    }
+    // get the users preference
+    const userselections = await Registeredcourses.findAll({
+      where: {
+        student_id: Student.id,
+        sessionName: session.sessionName,
+      },
+      transaction,
+    });
+    // get all the user's releveant tests
+    const userTest = alltest.filter(
+      (detail) =>
+        (detail.category_id === Student.category_id &&
+          detail.department_id === Student.department_id &&
+          detail.compulsory === 1) ||
+        (userselections.length > 0 &&
+          userselections.some(
+            (course) => course.subject_id === detail.subject_id
+          ))
+    );
+    // when there's no relevant test for the user
+    if (userTest.length === 0) {
+      await transaction.rollback();
+      return res.status(404).json({ message: "No matching tests found" });
+    }
+    // instantiate an array to contain all taken test
+    const donetest = [];
+    for (const test of userTest) {
+      const teststatus = await Score.findOne({
+        where: {
+          user_id: Student.id,
+          session_id: session_id,
+          subject_id: test.subject_id,
+        },
+        transaction,
       });
 
-      // Find all test takers who have completed the test for the subject
-      const testTakers = await Score.findAll({
-        where: { status: "done", subject: subject.name },
-      });
-
-      // Check if the number of test takers matches the number of students in the department
-      if (testTakers.length === studentsInDept.length) {
-        let query = `SELECT users.username, users.image, scores.score FROM users LEFT JOIN scores ON users.id = scores.user_id where users.department='${dept}'`;
-        const results = await User.sequelize.query(query, {
-          type: Sequelize.QueryTypes.SELECT, // specify the query type
-        });
-        const qrText = `This is the original ${subject.name} result`;
-        const qrImageData = await QRCode.toDataURL(qrText);
-        return res.status(201).json({
-          message: `The results for ${subject.name} in ${dept} are now ready for download`,
-          results: results,
-          subject: subject.name,
-          qrCodeImage: qrImageData, // Include QR code image data in the response
-        });
+      if (test.type === "exam" && teststatus.exam_status === 1) {
+        donetest.push(test.subject_id);
+      } else if (test.type === "test" && teststatus.CA_status === 1) {
+        donetest.push(test.subject_id);
       } else {
+        await transaction.commit();
         return res.status(200).json({
-          message: `Waiting for all students in ${dept} to complete the test for ${subject.name}`,
+          message: test.description,
+          duration: test.duration,
+          type: test.type,
+          subject: test.name,
+          subject_id: test.subject_id,
         });
       }
+    }
+
+    await transaction.commit();
+    if (donetest.length === userTest.length) {
+      return res.status(200).json({
+        message: "Our database shows that you've done all your exams for now",
+      });
+    } else {
+      return res.status(200).json({
+        message: "There are tests pending",
+        pendingTests: userTest.filter(
+          (test) => !donetest.includes(test.subject_id)
+        ),
+      });
+    }
+  } catch (error) {
+    await transaction.rollback();
+    console.error("error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+exports.viewuser = async (req, res) => {
+  const { id } = req.params;
+  const { searchrole, session_id } = req.body;
+  const { user_id, username, role } = req.payload;
+
+  try {
+    const transaction = await sequelize.transaction();
+    try {
+      if (id) {
+        if (searchrole === 2) {
+          const teacher = await Teachers.findOne({
+            where: { id },
+            transaction,
+          });
+          if (teacher) {
+            await transaction.commit();
+            return res.status(200).json({ teacher });
+          } else {
+            await transaction.rollback();
+            return res.status(404).json({
+              message: "No teacher found with such details in our database.",
+            });
+          }
+        }
+
+        if (searchrole === 3) {
+          const student = await Registration.findOne({
+            where: { id },
+            transaction,
+          });
+          if (student) {
+            await transaction.commit();
+            return res.status(200).json({ student });
+          } else {
+            await transaction.rollback();
+            return res
+              .status(404)
+              .json({ message: "No student fits such profile." });
+          }
+        }
+      }
+
+      if (user_id && role === 3 && session_id) {
+        const profile = await Registration.findOne({
+          where: { regNo: username },
+          transaction,
+        });
+        const sessionDetail = await Sessions.findOne({
+          where: { id: session_id },
+          transaction,
+        });
+
+        if (!sessionDetail) {
+          await transaction.rollback();
+          return res
+            .status(404)
+            .json({ message: "There is no such session in our database." });
+        }
+
+        const electedCourses = await Registeredcourses.findAll({
+          where: {
+            student_id: profile.id,
+            sessionName: sessionDetail.sessionName,
+          },
+          transaction,
+        });
+
+        const query = `
+          SELECT subjects.name as subject, teachers.fname as firstname, subjects.category_id, 
+                 subjects.department_id, subjects.compulsory, teachers.lname as lastname 
+          FROM subjects 
+          LEFT JOIN teachers ON subjects.teacherid = teachers.id 
+          WHERE subjects.category_id = ${profile.category_id} 
+            AND subjects.year = ${profile.year};
+        `;
+
+        const allSubjects = await Subjects.sequelize.query(query, {
+          type: sequelize.QueryTypes.SELECT,
+          transaction,
+        });
+
+        if (allSubjects.length > 0) {
+          const specificSubjects = allSubjects.filter(
+            (detail) =>
+              (detail.department_id === profile.department_id ||
+                detail.department_id === 0) &&
+              detail.compulsory === true &&
+              electedCourses.length > 0 &&
+              electedCourses.some((course) => course.subject_id === detail.id)
+          );
+
+          await transaction.commit();
+          return res.status(200).json({ subject_teachers: specificSubjects });
+        } else {
+          await transaction.rollback();
+          return res.status(404).json({
+            message: "Your category has no subject offered under it.",
+          });
+        }
+      }
+    } catch (error) {
+      await transaction.rollback();
+      console.error("Error:", error);
+      return res
+        .status(500)
+        .json({ message: "An error occurred during the transaction." });
     }
   } catch (error) {
     console.error("Error:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ message: "Internal server error." });
   }
 };
-
-exports.loginuser = async (req, res) => {
-  const { username, password } = req.body;
-  try {
-    const user = await User.findOne({ where: { username } });
-    if (user && password === user.password) {
-      if (user.department !== "admin") {
-        const test = await subject.findOne({
-          where: { department: user.department },
-        });
-        
-        if (test) {
-          const alreadydone = await Score.findAll({
-            where: { subject: test.name, status: "done" },
-          });
-          const confirm = alreadydone.find((item) => item.user_id === user.id);
-          if(!confirm){
-            const  questions = await Question.findAll({
-              where: { subject: test.name },
-            });
-            const score = await Score.findOne({ where: { user_id: user.id } });
-            res.status(200).json({
-              userdata: user,
-              questions: questions,
-              subject: test.name,
-              time: test.timeAllocated,
-              scoreid: score.id,
-            });
-          }else{
-            res.status(201).json({
-              message:
-                "report shows that you've done the test before go to the admin of the site for more information",
-              userdata: user,
-            })
-          }
-        }
-        else {
-          res.status(202).json({
-            message: "you department is not currently having an exam",
-            userdata: user,
-          });
-        }
-      } else {
-        res.json({ userdata: user });
-      }
-    } else {
-      res.status(401).send("Invalid username or password");
-    }
-  } catch (error) {
-    console.error("Error logging in:", error);
-    res.status(500).send("Error logging in,server is down for now");
-  }
-};
+exports.deleteuser = async (req, res) => {};

@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database.js");
-const Subject = sequelize.define(
-  "Subject",
+const Subjects = sequelize.define(
+  "Subjects",
   {
     // Define the columns of the 'Subjects' table
     id: {
@@ -10,16 +10,30 @@ const Subject = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
-    class_id: {
+    year: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      unique: false,
     },
-    subjectName: {
+    category_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    department_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    name: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: false,
     },
+    teacherid: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    compulsory:{
+      type:DataTypes.BOOLEAN,
+      allowNull:false
+    }
   },
   {
     // Other model options
@@ -27,4 +41,4 @@ const Subject = sequelize.define(
     timestamps: false, // Include timestamps (createdAt, updatedAt)
   }
 );
-module.exports = Subject;
+module.exports = Subjects;

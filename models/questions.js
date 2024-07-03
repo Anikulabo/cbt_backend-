@@ -1,6 +1,5 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database.js");
-const Subject = require("./subjects.js");
 const Question = sequelize.define(
   "Question",
   {
@@ -10,10 +9,6 @@ const Question = sequelize.define(
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
-    },
-    subject_id:{
-      type:DataTypes.INTEGER,
-      allowNull:false
     },
     question: {
       type: DataTypes.STRING,
@@ -39,10 +34,22 @@ const Question = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    session_id:{
-      type:DataTypes.INTEGER,
-      allowNull:false
-    }
+    subject_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    session_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    date: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+    status: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
   },
   {
     // Other model options
