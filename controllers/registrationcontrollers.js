@@ -158,68 +158,82 @@ exports.register = async (
   }
 };
 
-exports.viewregister = async (req, res) => {
+exports.viewregister = async (req, res, { models }) => {
   const { class_id, subject_id } = req.params;
+  const { Registration, Subjects, Registeredcourses, Sessions, sequelize } =
+    models;
   try {
     const transaction = await sequelize.transaction();
     try {
       let students = null;
+
       if (class_id) {
-        students = await Registration.findAll(
-          {
-            where: { class_id: class_id },
-            attributes: ["first_name", "last_name", "sex"],
-          },
-          { transaction }
-        );
+        students = await Registration.findAll({
+          where: { class_id: class_id },
+          attributes: ["first_name", "last_name", "sex"],
+          transaction,
+        });
       }
       if (subject_id) {
-        let detail = Subjects.findOne({ where: { id: subject_id } });
-        if (detail.compulsory === true) {
-          students = await Registration.findAll(
-            {
-              where: {
-                category_id: detail.category_id,
-                department_id: detail.department_id,
-                year: detail.year,
-              },
-              attributes: ["regno", "first_name", "last_name", "sex"],
+        const detail = await Subjects.findOne({
+          where: { id: subject_id },
+          transaction,
+        });
+        if (detail && detail.compulsory === true) {
+          students = await Registration.findAll({
+            where: {
+              category_id: detail.category_id,
+              department_id: detail.department_id,
+              year: detail.year,
             },
-            { transaction }
-          );
+            attributes: ["regno", "first_name", "last_name", "sex"],
+            transaction,
+          });
         } else {
-          const currentsession = Sessions.findOne({ where: { status: 1 } });
-          const query = `select first_name,last_name,sex from registration left join registeredcourses on registration.id=registeredcourses.student_id where sessionName=${currentsession.sessionName} and subject_id=${subject_id}`;
-          students = await Registeredcourses.sequelize.query(
-            query,
-            {
-              type: sequelize.QueryTypes.SELECT,
+          const currentsession = await Sessions.findOne({
+            where: { status: 1 },
+            transaction,
+          });
+          const query = `
+            SELECT first_name, last_name, sex
+            FROM registration
+            LEFT JOIN registeredcourses ON registration.id = registeredcourses.student_id
+            WHERE registeredcourses.sessionName = :sessionName
+            AND registeredcourses.subject_id = :subject_id
+          `;
+          students = await Registeredcourses.sequelize.query(query, {
+            replacements: {
+              sessionName: currentsession.sessionName,
+              subject_id,
             },
-            { transaction }
-          );
+            type: sequelize.QueryTypes.SELECT,
+            transaction,
+          });
         }
       }
-      // to view unadmitted student
-      if (students.length > 0) {
-        await transaction.commit();
+
+      // Commit the transaction if no errors
+      await transaction.commit();
+
+      if (students && students.length > 0) {
         return res.status(200).json({ data: students });
       } else {
-        await transaction.commit();
         return res.status(404).json({
-          message: "there is no students registered to this class or subject",
+          message: "There are no students registered to this class or subject",
         });
       }
     } catch (error) {
       // Rollback the transaction in case of any error
       await transaction.rollback();
+      //console.log(transaction.rollback);
       console.error(error);
       return res
         .status(500)
         .json({ message: "An error occurred during the viewing process" });
     }
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "the server is down for now" });
+    console.error("error:", error);
+    return res.status(500).json({ message: "The server is down for now" });
   }
 };
 exports.updateregister = async (req, res) => {

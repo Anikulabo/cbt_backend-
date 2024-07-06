@@ -6,8 +6,6 @@ const {
   updateregister,
 } = require("../controllers/registrationcontrollers");
 const {
-  generalauthentication,
-  adminauthentication,
   assignClass,
   notifyallparties 
 } = require("../controllers/jwtgeneration");
@@ -16,6 +14,7 @@ const Subjects=require("../models/subjects");
 const Sessions = require("../models/session");
 const Categories=require("../models/categories");
 const Activities=require("../models/activities");
+const {adminauthentication}=require("./simple");
 const { sequelize } = require("../models");
 const models = {
   Categories: Categories,
@@ -32,9 +31,9 @@ const registerWithDependencies = (req, res) => {
 registrationroutes.post("/", adminauthentication, registerWithDependencies);
 
 // Update registration (accessible to admins only)
-registrationroutes.put("/:id", adminauthentication, updateregister);
+//registrationroutes.put("/:id", adminauthentication, updateregister);
 
 // View registration details (accessible to general/all users)
-registrationroutes.get("/:class_id/:subject_id", generalauthentication, viewregister);
+//registrationroutes.get("/:class_id/:subject_id", generalauthentication, viewregister);
 
 module.exports = registrationroutes;
