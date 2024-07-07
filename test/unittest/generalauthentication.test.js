@@ -1,7 +1,7 @@
 const request = require("supertest");
 const express = require("express");
 const jwt = require("jsonwebtoken");
-const { generalauthentication } = require("../../controllers/jwtgeneration"); // Adjust the path accordingly
+const { generalauthentication } = require("../../apiroutes/authorization"); // Adjust the path accordingly
 const secretKey = process.env.JWT_KEY_SECRET || "KELVIN";
 // Use the actual secret key used in your application
 // Create a simple Express app for testing

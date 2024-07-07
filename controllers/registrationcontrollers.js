@@ -158,7 +158,7 @@ exports.register = async (
   }
 };
 
-exports.viewregister = async (req, res, { models }) => {
+exports.viewregister = async (req, res,  models ) => {
   const { class_id, subject_id } = req.params;
   const { Registration, Subjects, Registeredcourses, Sessions, sequelize } =
     models;

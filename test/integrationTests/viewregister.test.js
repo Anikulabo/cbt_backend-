@@ -4,7 +4,7 @@ const SequelizeMock = require("sequelize-mock");
 const { QueryTypes } = require("sequelize");
 
 describe("viewregister", () => {
-  let req, res, models, sequelize, transaction;
+  let req, res, models, sequelize;
 
   beforeEach(() => {
     // Mock request and response
@@ -12,12 +12,12 @@ describe("viewregister", () => {
     res = mockResponse();
 
     sequelize = new SequelizeMock();
-    sequelize.transaction = jest.fn(() => {
-      return Promise.resolve({
-        commit: jest.fn(),
-        rollback: jest.fn(),
-      });
-    });
+    transaction = {
+      commit: jest.fn(),
+      rollback: jest.fn(),
+    };
+
+    sequelize.transaction = jest.fn(() => Promise.resolve(transaction));
     // Mock models
     models = {
       Registration: sequelize.define("Registration", {
@@ -56,7 +56,7 @@ describe("viewregister", () => {
       .fn()
       .mockResolvedValue([{ first_name: "John", last_name: "Doe", sex: "M" }]);
 
-    await viewregister(req, res, { models });
+    await viewregister(req, res, models);
 
     expect(models.Registration.findAll).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -70,12 +70,40 @@ describe("viewregister", () => {
       data: [{ first_name: "John", last_name: "Doe", sex: "M" }],
     });
   });
-
+  it("it should return students for valid compulsory subject and a status of 200", async () => {
+    req.params = { subject_id: 1 };
+    models.Subjects.findOne = jest.fn().mockResolvedValue([
+      {
+        id: 1,
+        compulsory: true,
+        category_id: 1,
+        department_id: 1,
+        year: 2021,
+      },
+    ]);
+    models.Registration.findAll = jest
+      .fn()
+      .mockResolvedValue([{ first_name: "John", last_name: "Doe", sex: "M" }]);
+    await viewregister(req, res, models);
+    expect(models.Subjects.findOne).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 1 },
+        transaction: expect.any(Object),
+      })
+    );
+    expect(models.Registration.findAll).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { category_id: 1, department_id: 1, year: 2021 },
+        attributes: ["first_name", "last_name", "sex"],
+        transaction: expect.any(Object),
+      })
+    );
+  });
   it("should return 404 if no students are found for class_id", async () => {
     req.params = { class_id: 1 };
     models.Registration.findAll = jest.fn().mockResolvedValue([]);
 
-    await viewregister(req, res, { models });
+    await viewregister(req, res, models);
 
     expect(models.Registration.findAll).toHaveBeenCalledWith({
       where: { class_id: 1 },
@@ -90,13 +118,11 @@ describe("viewregister", () => {
 
   it("should return 500 if an error occurs during transaction", async () => {
     req.params = { class_id: 1 };
-    transaction = await sequelize.transaction();
     models.Registration.findAll = jest
       .fn()
       .mockRejectedValue(new Error("Test error"));
 
-    await viewregister(req, res, { models });
-
+    await viewregister(req, res, models);
     expect(transaction.rollback).toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
@@ -111,7 +137,7 @@ describe("viewregister", () => {
       .fn()
       .mockRejectedValue(new Error("Test error"));
 
-    await viewregister(req, res, { models });
+    await viewregister(req, res, models);
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({

@@ -20,3 +20,16 @@ exports.adminauthentication = (req, res, next) => {
       next();
     });
   };
+  exports.generalauthentication = (req, res, next) => {
+    const token = req.header("Authorization");
+    if (!token) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    jwt.verify(token.split(" ")[1], jwtSecretKey, (err, payload) => {
+      if (err) {
+        return res.status(403).json({ error: "Invalid or expired token" });
+      }
+      req.user = payload;
+      next();
+    });
+  };
