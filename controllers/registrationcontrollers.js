@@ -112,7 +112,6 @@ exports.register = async (
         },
         { transaction }
       );
-
       const activity = await Activities.create(
         {
           description: `${username} just registered a student`,
@@ -157,16 +156,15 @@ exports.register = async (
     });
   }
 };
-
-exports.viewregister = async (req, res,  models ) => {
+exports.viewregister = async (req, res, models) => {
   const { class_id, subject_id } = req.params;
   const { Registration, Subjects, Registeredcourses, Sessions, sequelize } =
     models;
-  try {
+console.log(subject_id)
+    try {
     const transaction = await sequelize.transaction();
     try {
       let students = null;
-
       if (class_id) {
         students = await Registration.findAll({
           where: { class_id: class_id },
@@ -179,39 +177,47 @@ exports.viewregister = async (req, res,  models ) => {
           where: { id: subject_id },
           transaction,
         });
-        if (detail && detail.compulsory === true) {
-          students = await Registration.findAll({
-            where: {
-              category_id: detail.category_id,
-              department_id: detail.department_id,
-              year: detail.year,
-            },
-            attributes: ["regno", "first_name", "last_name", "sex"],
-            transaction,
-          });
-        } else {
-          const currentsession = await Sessions.findOne({
-            where: { status: 1 },
-            transaction,
-          });
-          const query = `
+        if (detail) {
+          if (detail.compulsory === true) {
+            students = await Registration.findAll({
+              where: {
+                category_id: detail.category_id,
+                department_id: detail.department_id,
+                year: detail.year,
+              },
+              attributes: ["first_name", "last_name", "sex"],
+              transaction,
+            });
+          }
+          if (detail.compulsory === false) {
+            //console.log(detail)
+            const currentsession = await Sessions.findOne({
+              where: { status: 1 },
+              transaction,
+            });
+            const query = `
             SELECT first_name, last_name, sex
             FROM registration
             LEFT JOIN registeredcourses ON registration.id = registeredcourses.student_id
             WHERE registeredcourses.sessionName = :sessionName
             AND registeredcourses.subject_id = :subject_id
           `;
-          students = await Registeredcourses.sequelize.query(query, {
-            replacements: {
-              sessionName: currentsession.sessionName,
-              subject_id,
-            },
-            type: sequelize.QueryTypes.SELECT,
-            transaction,
-          });
+            students = await Registeredcourses.sequelize.query(query, {
+              replacements: {
+                sessionName: currentsession.sessionName,
+                subject_id,
+              },
+              type: sequelize.QueryTypes.SELECT,
+              transaction,
+            });
+          }
+        } else {
+          await transaction.rollback();
+          return res
+            .status(404)
+            .json({ message: "there is no such subject in our datbase" });
         }
       }
-
       // Commit the transaction if no errors
       await transaction.commit();
 

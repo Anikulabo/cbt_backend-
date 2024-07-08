@@ -23,6 +23,9 @@ describe("viewregister", () => {
       Registration: sequelize.define("Registration", {
         first_name: "John",
         last_name: "Doe",
+        category_id: 1,
+        department_id: 1,
+        year: 2,
         sex: "M",
       }),
       Subjects: sequelize.define("Subjects", {
@@ -30,7 +33,7 @@ describe("viewregister", () => {
         compulsory: true,
         category_id: 1,
         department_id: 1,
-        year: 2021,
+        year: 2,
       }),
       Registeredcourses: sequelize.define("Registeredcourses", {
         student_id: 1,
@@ -48,7 +51,6 @@ describe("viewregister", () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
-
   it("should return 200 and students for valid class_id", async () => {
     req.params = { class_id: 1 };
 
@@ -70,20 +72,18 @@ describe("viewregister", () => {
       data: [{ first_name: "John", last_name: "Doe", sex: "M" }],
     });
   });
-  it("it should return students for valid compulsory subject and a status of 200", async () => {
+it("it should return students for valid compulsory subject and a status of 200", async () => {
     req.params = { subject_id: 1 };
-    models.Subjects.findOne = jest.fn().mockResolvedValue([
-      {
-        id: 1,
-        compulsory: true,
-        category_id: 1,
-        department_id: 1,
-        year: 2021,
-      },
-    ]);
+    models.Subjects.findOne = jest.fn().mockResolvedValue({
+      id: 1,
+      compulsory: true,
+      category_id: 1,
+      department_id: 1,
+      year: 2,
+    });
     models.Registration.findAll = jest
       .fn()
-      .mockResolvedValue([{ first_name: "John", last_name: "Doe", sex: "M" }]);
+      .mockResolvedValue({ first_name: "John", last_name: "Doe", sex: "M" });
     await viewregister(req, res, models);
     expect(models.Subjects.findOne).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -93,7 +93,7 @@ describe("viewregister", () => {
     );
     expect(models.Registration.findAll).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { category_id: 1, department_id: 1, year: 2021 },
+        where: { category_id: 1, department_id: 1, year: 2 },
         attributes: ["first_name", "last_name", "sex"],
         transaction: expect.any(Object),
       })
@@ -115,7 +115,6 @@ describe("viewregister", () => {
       message: "There are no students registered to this class or subject",
     });
   });
-
   it("should return 500 if an error occurs during transaction", async () => {
     req.params = { class_id: 1 };
     models.Registration.findAll = jest
@@ -129,7 +128,6 @@ describe("viewregister", () => {
       message: "An error occurred during the viewing process",
     });
   });
-
   it("should return 500 if an error occurs before transaction", async () => {
     req.params = { class_id: 1 };
 
