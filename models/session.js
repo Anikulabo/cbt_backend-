@@ -10,9 +10,17 @@ const Sessions = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
-    session_name: {
+    sessionName: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    term:{
+      type:DataTypes.STRING,
+      allowNull:false
+    },
+    active:{
+      type:DataTypes.BOOLEAN,
+      default:true
     }
   },
   {
