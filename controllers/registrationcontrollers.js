@@ -160,8 +160,8 @@ exports.viewregister = async (req, res, models) => {
   const { class_id, subject_id } = req.params;
   const { Registration, Subjects, Registeredcourses, Sessions, sequelize } =
     models;
-console.log(subject_id)
-    try {
+  console.log(subject_id);
+  try {
     const transaction = await sequelize.transaction();
     try {
       let students = null;

@@ -5,7 +5,7 @@ const Notifications = require("../models/notification.js");
 const Class = require("../models/class.js");
 const io = require("../index.js");
 const jwt = require("jsonwebtoken");
-const jwtSecretKey=process.env.JWT_SECRET_KEY
+const jwtSecretKey = process.env.JWT_SECRET_KEY;
 exports.generateToken = (mainpayload) => {
   const { userid, username, role } = mainpayload;
   let jwtSecretKey = process.env.JWT_SECRET_KEY;
@@ -277,7 +277,7 @@ exports.objectreducer = (prev, current) => {
 exports.typechecker = (incomingobject, expectedkeys) => {
   // An array to accept the good keys
   const goodkeys = [];
-  
+
   // Check if expectedkeys is an array
   if (!Array.isArray(expectedkeys)) {
     throw new Error(
@@ -290,11 +290,13 @@ exports.typechecker = (incomingobject, expectedkeys) => {
     (detail) =>
       !detail.key ||
       !detail.type ||
-      (typeof detail.type !== "string"&&!Array.isArray(detail.type))
+      (typeof detail.type !== "string" && !Array.isArray(detail.type))
   );
   if (abnormality) {
     throw new Error(
-      `Abnormal key: ${JSON.stringify(abnormality)}. We need an array of objects with keys ['key', 'type'] as the second parameter, and both key and type must be strings.`
+      `Abnormal key: ${JSON.stringify(
+        abnormality
+      )}. We need an array of objects with keys ['key', 'type'] as the second parameter, and both key and type must be strings.`
     );
   }
 
@@ -321,7 +323,9 @@ exports.typechecker = (incomingobject, expectedkeys) => {
     // Validate the type of the value
     if (match.type !== "array" && match.type !== typeof value) {
       throw new Error(
-        `Expected a ${match.type} for key ${key} in the first parameter, but received a ${typeof value}.`
+        `Expected a ${
+          match.type
+        } for key ${key} in the first parameter, but received a ${typeof value}.`
       );
     }
 
@@ -331,11 +335,17 @@ exports.typechecker = (incomingobject, expectedkeys) => {
         `Expected an array for key ${key} in the incoming object, but received a ${typeof value}.`
       );
     }
-
+    if (value === null) {
+      throw new Error(
+        `expected ${match.type} in key ${key} of the first parameter but you gave a null value`
+      );
+    }
     // Handle cases where 'type' is an array of acceptable types
     if (Array.isArray(match.type) && !match.type.includes(typeof value)) {
       throw new Error(
-        `Expected one of [${match.type.join(", ")}] for key ${key}, but received ${typeof value}.`
+        `Expected one of [${match.type.join(
+          ", "
+        )}] for key ${key}, but received ${typeof value}.`
       );
     }
 
@@ -352,4 +362,45 @@ exports.typechecker = (incomingobject, expectedkeys) => {
   }
 
   return goodkeys;
+};
+exports.teacherselect = async (arg) => {
+  try {
+    // Ensure no type mismatch
+    this.typechecker(arg, [
+      { key: "teacherids", type: "array" }, // Array of the teachers we're selecting from
+      { key: "Subjects", type: "object" }, // Subjects model dependency
+      { key: "transaction", type: "object" }, // Transaction dependency
+    ]);
+
+    const { teacherids, Subjects, transaction } = arg;
+    let teachers_to_subjects = [];
+    let no_of_subjects = [];
+
+    for (const teacherid of teacherids) {
+      const subjects_taken = await Subjects.findAll({
+        where: { id: teacherid },
+        transaction
+      });
+
+      if (subjects_taken.length === 0) {
+        return teacherid;
+      } else {
+        teachers_to_subjects.push({
+          teacherid,
+          no_of_subject: subjects_taken.length,
+        });
+        no_of_subjects.push(subjects_taken.length);
+      }
+    }
+
+    const min_subject_count = Math.min(...no_of_subjects);
+    const choosenteacher = teachers_to_subjects.find(
+      (detail) => detail.no_of_subject === min_subject_count
+    );
+
+    return choosenteacher ? choosenteacher.teacherid : null;
+  } catch (error) {
+    console.error("error:", error);
+    throw error; // Optionally rethrow the error to let the caller handle it
+  }
 };
