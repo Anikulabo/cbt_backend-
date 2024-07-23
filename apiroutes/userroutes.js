@@ -8,7 +8,7 @@ const {
 const {
     generalauthentication,
   } = require("../controllers/jwtgeneration");
-  userroutes.get('/',loginuser);
-  userroutes.get('/user/cbt',cbtlogin);
+  userroutes.post('/',loginuser);
+  userroutes.get('/cbt',cbtlogin);
   //userroutes.get('/:id',generalauthentication,viewuser);
   module.exports = userroutes;

@@ -2,8 +2,12 @@ const express = require("express");
 const dotenv = require("dotenv");
 const Registration = require("../models/registration.js");
 const Notifications = require("../models/notification.js");
+const { Server } = require('socket.io');
 const Class = require("../models/class.js");
-const io = require("../index.js");
+const app = express()
+const { createServer } = require('http');
+const server = createServer(app);
+ exports.io = new Server(server);
 const jwt = require("jsonwebtoken");
 const jwtSecretKey = process.env.JWT_SECRET_KEY;
 exports.generateToken = (mainpayload) => {
@@ -201,7 +205,7 @@ exports.notifyAllParties = async (dep) => {
     try {
       // Notify class teacher
       if (classid) {
-        io.to(`class_${classid}`).emit(`${author} ${classmessage}`);
+        this.io.to(`class_${classid}`).emit(`${author} ${classmessage}`);
         await Notifications.create(
           {
             activity_id: activity_id,
@@ -216,7 +220,7 @@ exports.notifyAllParties = async (dep) => {
       // Notify subject teachers
       if (subjects.length > 0) {
         const promises = subjects.map((subject) => {
-          io.to(`subject_${subject.id}`).emit(`${author} ${subjectsmessage}`);
+          this.io.to(`subject_${subject.id}`).emit(`${author} ${subjectsmessage}`);
           return Notifications.create(
             {
               activity_id: activity_id,

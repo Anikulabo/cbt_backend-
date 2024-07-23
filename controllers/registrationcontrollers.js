@@ -1,13 +1,4 @@
 const { Op } = require("sequelize");
-const Registration = require("../models/registration");
-const Class = require("../models/class");
-const { objectreducer } = require("./jwtgeneration");
-const Sessions = require("../models/session");
-const Activities = require("../models/activities");
-const Subjects = require("../models/subjects");
-const Registeredcourses = require("../models/registeredcourses.");
-const { sequelize } = require("../models");
-// Update your register function to accept dependencies
 exports.register = async (
   req,
   res,
@@ -242,7 +233,8 @@ exports.viewregister = async (req, res, models) => {
     return res.status(500).json({ message: "The server is down for now" });
   }
 };
-exports.updateregister = async (req, res) => {
+// Ensure proper dependency injection
+exports.updateregister = async (req, res, { models, objectreducer, assignClass, notifyallparties }) => {
   const { id } = req.params;
   const {
     first_name,
@@ -257,28 +249,30 @@ exports.updateregister = async (req, res) => {
     address,
     parent,
   } = req.body;
+  const { sequelize, Registration, Sessions, Subjects, Activities, Class, Registeredcourses } = models;
 
   try {
     const transaction = await sequelize.transaction();
+
     try {
-      const Student = await Registration.findOne({
+      const student = await Registration.findOne({
         where: { id },
         transaction,
       });
 
-      const Session = await Sessions.findOne({
+      const sessionDetail = await Sessions.findOne({
         where: { id: session },
         transaction,
       });
 
-      if (!Student) {
+      if (!student) {
         await transaction.rollback();
         return res
           .status(404)
           .json({ message: "No student found for the given ID." });
       }
 
-      if (!Session) {
+      if (!sessionDetail) {
         await transaction.rollback();
         return res
           .status(404)
@@ -299,135 +293,127 @@ exports.updateregister = async (req, res) => {
         parent,
       };
 
-      const allchanges = objectreducer(Student, incomingChanges);
+      const allChanges = objectreducer(student, incomingChanges);
 
       if (
-        allchanges.changeditems.includes("category_id") &&
-        allchanges.changeditems.includes("department_id")
+        allChanges.changeditems.includes("category_id") &&
+        allChanges.changeditems.includes("department_id")
       ) {
         const main = { cate: category_id, dept: department_id, year: year };
-        const choosenClass = await assignClass(main);
+        const chosenClass = await assignClass(main);
 
         const compulsorySubjects = await Subjects.findAll({
           where: {
-            category_id: allchanges.newobject.category_id,
-            year: allchanges.newobject.year,
-            [op.or]: [
-              { department_id: allchanges.newobject.department_id },
+            category_id: allChanges.newobject.category_id,
+            year: allChanges.newobject.year,
+            [Op.or]: [
+              { department_id: allChanges.newobject.department_id },
               { department_id: 0 },
             ],
           },
           transaction,
         });
 
-        if (Student.year === 0) {
+        if (student.year === 0) {
           const lastRow = await Registration.findOne({
             order: [["id", "DESC"]],
             transaction,
           });
 
           const lastID = lastRow ? lastRow.id : 0;
-          const regNo = `${Session.sessionName.slice(0, 4)}${lastID}${
-            choosenClass.classid
-          }`;
+          const regNo = `${sessionDetail.sessionName.slice(0, 4)}${lastID}${chosenClass.classid}`;
 
-          allchanges.newobject.regNo = regNo;
+          allChanges.newobject.regNo = regNo;
 
-          await Registration.update(allchanges.newobject, {
+          await Registration.update(allChanges.newobject, {
             where: { id },
             transaction,
           });
 
-          const activity = await Activities.create(
-            {
-              description: `${req.payload.username} just admitted a student`,
-              performed_by: req.payload.userid,
-              createdAt: new Date(),
-              role: req.payload.role,
-            },
-            { transaction }
-          );
+          const activity = await Activities.create({
+            description: `${req.payload.username} just admitted a student`,
+            performed_by: req.payload.userid,
+            createdAt: new Date(),
+            role: req.payload.role,
+          }, { transaction });
 
           const dep = {
-            classid: choosenClass.classid,
+            classid: chosenClass.classid,
             subjects: compulsorySubjects,
-            transaction: transaction,
+            transaction,
             classmessage: "just registered a student to your class",
             subjectsmessage: "just registered a student to your subject",
             author: req.payload.username,
             activity_id: activity.id,
-            teacherid: choosenClass.teacher,
+            teacherid: chosenClass.teacher,
           };
 
           await notifyallparties(dep);
           await transaction.commit();
 
           return res.status(200).json({
-            message: `Student ${Student.first_name} ${Student.last_name} has been successfully updated`,
+            message: `Student ${student.first_name} ${student.last_name} has been successfully updated`,
           });
         } else {
-          const formercls = Student.class_id;
-          const formerclsdetail = await Class.findOne({
-            where: { id: formercls },
+          const formerClass = student.class_id;
+          const formerClassDetail = await Class.findOne({
+            where: { id: formerClass },
             transaction,
           });
 
-          const allprevcourse = await Subjects.findAll({
-            where: { category_id: Student.category_id, year: Student.year },
+          const allPrevCourses = await Subjects.findAll({
+            where: { category_id: student.category_id, year: student.year },
             transaction,
           });
 
-          const prevregisteredcourse = await Registeredcourses.findAll({
-            where: { sessionName: Session.sessionName, student_id: id },
+          const prevRegisteredCourses = await Registeredcourses.findAll({
+            where: { sessionName: sessionDetail.sessionName, student_id: id },
             transaction,
           });
 
-          const formercourses = allprevcourse.filter(
+          const formerCourses = allPrevCourses.filter(
             (detail) =>
-              detail.department_id === Student.department_id ||
+              detail.department_id === student.department_id ||
               detail.department_id === 0 ||
-              (prevregisteredcourse.length > 0 &&
-                prevregisteredcourse.some(
+              (prevRegisteredCourses.length > 0 &&
+                prevRegisteredCourses.some(
                   (course) => course.subject_id === detail.id
                 ))
           );
 
-          allchanges.newobject.class_id = choosenClass.classid;
-          await Registration.update(allchanges.newobject, {
+          allChanges.newobject.class_id = chosenClass.classid;
+          await Registration.update(allChanges.newobject, {
             where: { id },
             transaction,
           });
 
-          const activity = await Activities.create(
-            {
-              description: `${req.payload.username} just updated a student changing class`,
-              performed_by: req.payload.userid,
-              createdAt: new Date(),
-              role: req.payload.role,
-            },
-            { transaction }
-          );
+          const activity = await Activities.create({
+            description: `${req.payload.username} just updated a student changing class`,
+            performed_by: req.payload.userid,
+            createdAt: new Date(),
+            role: req.payload.role,
+          }, { transaction });
 
           const deps = [
             {
-              classid: formercls,
-              subjects: formercourses,
-              transaction: transaction,
+              classid: formerClass,
+              subjects: formerCourses,
+              transaction,
               classmessage: "just removed a student from your class",
-              subjectsmessage: `stopped ${Student.first_name} ${Student.last_name} from taking your subject`,
+              subjectsmessage: `stopped ${student.first_name} ${student.last_name} from taking your subject`,
               author: req.payload.username,
               activity_id: activity.id,
-              teacherid: formerclsdetail.teacherid,
+              teacherid: formerClassDetail.teacherid,
             },
             {
-              classid: choosenClass.classid,
+              classid: chosenClass.classid,
               subjects: compulsorySubjects,
-              transaction: transaction,
+              transaction,
               classmessage: "just registered a student to your class",
               subjectsmessage: `a new student is now taking your subject`,
               author: req.payload.username,
               activity_id: activity.id,
-              teacherid: choosenClass.teacher,
+              teacherid: chosenClass.teacher,
             },
           ];
 
@@ -435,9 +421,21 @@ exports.updateregister = async (req, res) => {
           await transaction.commit();
 
           return res.status(200).json({
-            message: `Student ${Student.first_name} ${Student.last_name} has been successfully updated`,
+            message: `Student ${student.first_name} ${student.last_name} has been successfully updated`,
           });
         }
+      } else {
+        // Handle case when category_id or department_id is not changed
+        await Registration.update(allChanges.newobject, {
+          where: { id },
+          transaction,
+        });
+
+        await transaction.commit();
+
+        return res.status(200).json({
+          message: `Student ${student.first_name} ${student.last_name} has been successfully updated`,
+        });
       }
     } catch (error) {
       await transaction.rollback();

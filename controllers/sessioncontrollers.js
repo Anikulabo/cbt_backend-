@@ -1,19 +1,8 @@
 const { Op } = require("sequelize");
-const { sequelize } = require("../models");
-const Sessions = require("../models/session");
-const { notifyallparties, objectreducer } = require("./jwtgeneration");
-const Subjects = require("../models/subjects");
-const io = require("../index");
-const Registration = require("../models/registration");
-const Categories = require("../models/categories");
-const { assignClass } = require("./jwtgeneration");
-const Activities = require("../models/activities");
-const Class = require("../models/class");
-const Score = require("../models/scores");
-const { typechecker } = require("./jwtgeneration");
-const Notifications = require("../models/notification");
-exports.notifyauser = async (obj) => {
-  let expectedkeys = [
+// Updated notifyauser function with dependency injection
+exports.notifyauser = async (obj, { typechecker, Activities, Notifications, io }) => {
+  // Define expected keys and their types
+  const expectedKeys = [
     { key: "description", type: "string" },
     { key: "performed_by", type: "number" },
     { key: "roleOfperformer", type: "string" },
@@ -21,17 +10,20 @@ exports.notifyauser = async (obj) => {
     { key: "recipient", type: "number" },
     { key: "roleOfrecipient", type: "number" },
   ];
-  // to validate types and some other checks
-  const check = typechecker(obj, expectedkeys);
+
+  // Validate object properties using typechecker
+  const check = typechecker(obj, expectedKeys);
   if (Array.isArray(check)) {
     const {
-      description, // should be a striing
-      performed_by, // should be a number :id of the performer
-      roleOfperformer, // should also be a number:0 for the system,1 for admin,2 for teacher,3 for student
-      transaction, // should be an object holding the transaction
-      recipient, // also be a number :id of receiver
-      roleOfrecipient, //should also be a number:0 for the system,1 for admin,2 for teacher,3 for student
+      description,
+      performed_by,
+      roleOfperformer,
+      transaction,
+      recipient,
+      roleOfrecipient,
     } = obj;
+
+    // Create activity entry
     const activity = await Activities.create(
       {
         description,
@@ -39,34 +31,38 @@ exports.notifyauser = async (obj) => {
         createdAt: new Date(),
         role: roleOfperformer,
       },
-      transaction
+      { transaction }
     );
-    //online notification of user
-    // recipient is a student
+
+    // Notify user online based on recipient role
     if (roleOfrecipient === 3) {
       io.to(`student_${recipient}`).emit(description);
-    }
-    //recipient is a teacher
-    if (roleOfrecipient === 2) {
+    } else if (roleOfrecipient === 2) {
       io.to(`teacher_${recipient}`).emit(description);
     }
-    //save notification for case where student might not be online
+
+    // Save notification for users who might be offline
     await Notifications.create(
       { activity_id: activity.id, to: recipient, type: roleOfrecipient },
-      transaction
+      { transaction }
     );
   }
 };
-exports.addsession = async (req, res) => {
+
+// Ensure proper dependency injection
+exports.addsession = async (req, res, { models, io, assignClass,  notifyauser, notifyallparties }) => {
   const { sessionName, term } = req.body;
+  const { sequelize, Sessions, Registration, Class, Subjects, Activities, Categories } = models;
+
+  let transaction;
   try {
-    const transaction = await sequelize.transaction();
+    transaction = await sequelize.transaction();
     try {
       // Determine if the new session to be uploaded is still the active session
       await Sessions.update({ active: false }, { transaction }); // to make sure every other session is rendered inactive
+
       const session_in_progress = await Sessions.findAll(
-        { where: { sessionName } },
-        { transaction }
+        { where: { sessionName }, transaction }
       );
 
       if (session_in_progress.length > 0) {
@@ -77,19 +73,16 @@ exports.addsession = async (req, res) => {
 
         // Find all admitted students
         const admittedusers = await Registration.findAll(
-          {
-            where: { year: { [Op.gt]: 0 } },
-          },
-          { transaction }
+          { where: { year: { [Op.gt]: 0 } }, transaction }
         );
 
         // Find all available classes for admitted users
         const allClasses = await Class.findAll();
 
+        // Process user updates
         const userPromises = admittedusers.map(async (user) => {
           const category = await Categories.findOne(
-            { where: { id: user.category_id } },
-            { transaction }
+            { where: { id: user.category_id }, transaction }
           );
 
           if (user.year < category.year) {
@@ -104,45 +97,47 @@ exports.addsession = async (req, res) => {
 
             await Registration.update(
               { year: newYear, class_id: chosenClass.classid },
-              { where: { id: user.id } },
-              { transaction }
+              { where: { id: user.id }, transaction }
             );
+
             const obj = {
-              description: `congratulation you've been promoted to year ${newYear} your class is:${chosenClass.classmname}`,
+              description: `Congratulations! You've been promoted to year ${newYear}. Your class is: ${chosenClass.classmname}`,
               performed_by: 0,
               roleOfperformer: 0,
               transaction: transaction,
               recipient: user.id,
               roleOfrecipient: 3,
             };
-            await this.notifyauser(obj);
+
+            await notifyauser(obj, io);
+
             const indexOfChosenClass = allClasses.findIndex(
               (detail) => detail.id === chosenClass.classid
             );
             if (indexOfChosenClass !== -1) {
-              const initialNumberOfStudents =
-                allClasses[indexOfChosenClass].totalstudents || 0;
-              allClasses[indexOfChosenClass].totalstudents =
-                initialNumberOfStudents + 1;
+              const initialNumberOfStudents = allClasses[indexOfChosenClass].totalstudents || 0;
+              allClasses[indexOfChosenClass].totalstudents = initialNumberOfStudents + 1;
             }
           } else {
             await Registration.update(
               { year: 0, class_id: 0 },
-              { where: { id: user.id } },
-              { transaction }
+              { where: { id: user.id }, transaction }
             );
+
             const obj = {
-              description: `congratulation you're finally done with category: ${category.categoryName}`,
+              description: `Congratulations! You're finally done with category: ${category.categoryName}`,
               performed_by: 0,
               roleOfperformer: 0,
               transaction: transaction,
               recipient: user.id,
               roleOfrecipient: 3,
             };
-            await this.notifyauser(obj);
+
+            await notifyauser(obj, io);
           }
         });
 
+        // Process class updates
         const classPromises = allClasses.map(async (unique) => {
           const compulsorySubjects = await Subjects.findAll(
             {
@@ -155,13 +150,13 @@ exports.addsession = async (req, res) => {
                   { department_id: 0 },
                 ],
               },
-            },
-            { transaction }
+              transaction
+            }
           );
 
           const activity = await Activities.create(
             {
-              description: `system just registered ${unique.totalstudents} student to ${unique.classname}`,
+              description: `System just registered ${unique.totalstudents} students to ${unique.classname}`,
               performed_by: 0,
               createdAt: new Date(),
               role: 1,
@@ -174,26 +169,26 @@ exports.addsession = async (req, res) => {
             classid: unique.id,
             subjects: compulsorySubjects,
             transaction,
-            classmessage: `just registered ${unique.totalstudents} student to your class`,
-            subjectsmessage: `just registered ${unique.totalstudents} student to your subject from class ${unique.classname}`,
+            classmessage: `Just registered ${unique.totalstudents} students to your class`,
+            subjectsmessage: `Just registered ${unique.totalstudents} students to your subject from class ${unique.classname}`,
             author: "system",
             activity_id: activity.id,
             teacherid: unique.teacherid,
           };
-          // Notify all parties
+
           await notifyallparties(dep);
         });
+
         userPromises.push(
           Sessions.create({ sessionName, term }, { transaction })
         );
+
         await Promise.all(userPromises);
         await Promise.all(classPromises);
       }
 
       await transaction.commit();
-      return res
-        .status(201)
-        .json({ message: "session has been successfully updated" });
+      return res.status(201).json({ message: "Session has been successfully updated" });
     } catch (error) {
       await transaction.rollback();
       console.error("Error during session update:", error);
@@ -207,9 +202,11 @@ exports.addsession = async (req, res) => {
   }
 };
 
-exports.updatesession = async (req, res) => {
+// Ensure proper dependency injection
+exports.updatesession = async (req, res, { models, objectreducer }) => {
   const { id } = req.params;
   const { sessionName, term } = req.body;
+  const { sequelize, Sessions } = models;
 
   // Input validation
   if (!id || !sessionName || !term) {
@@ -220,14 +217,15 @@ exports.updatesession = async (req, res) => {
     // Find the session by id
     const sessionDetail = await Sessions.findOne({ where: { id } });
     if (!sessionDetail) {
-      return res
-        .status(404)
-        .json({ message: "No session found with the given ID" });
+      return res.status(404).json({ message: "No session found with the given ID" });
     }
+
     // Calculate the changes
-    let allChanges = objectreducer(sessionDetail, { sessionName, term });
-    // If  2 items changed, update all sessions with the same name and the current session
-    if (allChanges.changeditems.length == 2) {
+    const allChanges = objectreducer(sessionDetail, { sessionName, term });
+
+    // Update sessions based on the changes
+    if (allChanges.changeditems.length === 2) {
+      // If 2 items changed, update all sessions with the same name and the current session
       await Sessions.update(allChanges.updatedEntries["sessionName"], {
         where: { sessionName: sessionDetail.sessionName },
       });
@@ -247,17 +245,19 @@ exports.updatesession = async (req, res) => {
         });
       }
     }
+
     // Send a success response
-    res.status(200).json({ message: "Session updated successfully" });
+    return res.status(200).json({ message: "Session updated successfully" });
   } catch (error) {
     console.error("Error updating session:", error);
-    res
-      .status(500)
-      .json({ message: "An error occurred while updating the session" });
+    return res.status(500).json({ message: "An error occurred while updating the session" });
   }
 };
-exports.viewsessions = async (req, res) => {
+
+// Ensure proper dependency injection
+exports.viewsessions = async (req, res, { models }) => {
   const { username, userid, role } = req.payload;
+  const { sequelize, Sessions, Registration, Score } = models;
 
   // Input validation
   if (!username || !userid || role === undefined) {
@@ -276,18 +276,17 @@ exports.viewsessions = async (req, res) => {
           SELECT registration.id, categories.categoryName, registration.year, registration.session_id 
           FROM registration 
           LEFT JOIN categories ON registration.category_id = categories.id 
-          WHERE regNo = ${username}
+          WHERE regNo = :username
         `;
         const details = await Registration.sequelize.query(query, {
+          replacements: { username },
           type: sequelize.QueryTypes.SELECT,
           transaction,
         });
 
         if (details.length === 0) {
           await transaction.rollback();
-          return res
-            .status(404)
-            .json({ message: "No registration details found for the student" });
+          return res.status(404).json({ message: "No registration details found for the student" });
         }
 
         const studentDetails = details[0];
@@ -324,16 +323,14 @@ exports.viewsessions = async (req, res) => {
                 FROM classes 
                 LEFT JOIN scores ON classes.id = scores.class_id 
                 LEFT JOIN categories ON classes.category_id = categories.id 
-                WHERE user_id = ${studentDetails.id} AND session_id = ${session.id} 
+                WHERE user_id = :userId AND session_id = :sessionId 
                 LIMIT 1
               `;
-              const pastDetails = await Score.sequelize.query(
-                pastDetailsQuery,
-                {
-                  type: sequelize.QueryTypes.SELECT,
-                  transaction,
-                }
-              );
+              const pastDetails = await Score.sequelize.query(pastDetailsQuery, {
+                replacements: { userId: studentDetails.id, sessionId: session.id },
+                type: sequelize.QueryTypes.SELECT,
+                transaction,
+              });
 
               if (pastDetails.length > 0) {
                 const pastDetail = pastDetails[0];

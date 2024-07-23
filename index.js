@@ -1,23 +1,38 @@
 const dotenv = require('dotenv');
-dotenv.config();
-const express = require("express");
+dotenv.config(); // Load environment variables
+
+const express = require('express');
+const cors = require('cors');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
-const path = require('path');  
-const port=process.env.PORT||3001;
+const path = require('path');
+const bodyParser = require('body-parser');
+
+const port = process.env.PORT || 3001;
 const app = express();
 const server = createServer(app);
-const io =new  Server(server);
-const bodyParser = require('body-parser');
-const notificationroutes=require('./apiroutes/notificationroute');
-///const {adminauthentication}=require('./controllers/jwtgeneration');
-const registrationroutes=require('./apiroutes/registratioroute');
-//const teachersroute=require('./apiroutes/teachersroute');
-const userroutes=require('./apiroutes/userroutes');
-// socket connection
+const io = new Server(server);
+
+// Import routes
+const notificationroutes = require('./apiroutes/notificationroute');
+const registrationroutes = require('./apiroutes/registratioroute');
+const userroutes = require('./apiroutes/userroutes');
+const subjectsroutes=require('./apiroutes/subjectsroute');
+const teachersroute=require('./apiroutes/teachersroute');
+// Middleware setup
+app.use(cors({
+  origin: 'http://localhost:3000', // Your React app's URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed methods
+  allowedHeaders: ['Content-Type', 'Authorization'] // Allowed headers
+}));
+app.use(express.json()); // Parse JSON bodies
+app.use(bodyParser.urlencoded({ extended: true })); // Parse URL-encoded bodies
+
+// Socket.io setup
 io.on('connection', (socket) => {
   console.log('New client connected');
-
+  socket.emit('message', 'Hello from server');
+  
   // Handle joining a room
   socket.on('joinRoom', (room) => {
     socket.join(room);
@@ -36,17 +51,23 @@ io.on('connection', (socket) => {
   });
 });
 
-app.use(express.json()); 
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use('/registration',registrationroutes);
-//app.use('/teacher',adminauthentication,teachersroute);
-app.use('/notifications',notificationroutes);
-app.use('/user',userroutes);
-if (process.env.NODE_ENV !== 'test') {
-  app.listen(port, () => console.log(`Listening on port ${port}`))
-}
-app.use(express.static(path.join(__dirname, "client", "build")));
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "client/build/index.html"));
+// Route setup
+app.use('/registration', registrationroutes);
+app.use('/notifications', notificationroutes);
+app.use('/user', userroutes);
+app.use('/subject',subjectsroutes);
+app.use('/teacher',teachersroute)
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, 'client', 'build')));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'client/build/index.html'));
 });
-module.exports=io
+
+// Start server
+if (process.env.NODE_ENV !== 'test') {
+  server.listen(port, () => {
+    console.log(`Server listening on port ${port}`);
+  });
+}
+
+module.exports = { io, server, app };

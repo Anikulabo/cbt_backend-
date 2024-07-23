@@ -11,7 +11,7 @@ const bcrypt = require("bcrypt");
 const Subjects = require("../models/subjects");
 exports.loginuser = async (req, res) => {
   const { regno, password } = req.body;
-
+  console.log({ regno, password })
   try {
     // Attempt to find the user in the database
     const detail = await Users.findOne({ where: { regNo: regno } });
@@ -34,7 +34,7 @@ exports.loginuser = async (req, res) => {
       const token = generateToken(payload);
       return res
         .status(200)
-        .json({ message: "login successfully", token: token });
+        .json({ message: "login successfully", token: token,role:payload['role'] });
     } else {
       // Handle incorrect password case
       return res.status(401).json({ message: "incorrect password" });

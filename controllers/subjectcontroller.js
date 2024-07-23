@@ -1,5 +1,6 @@
+const { where } = require("sequelize");
 const teacherselect = require("./jwtgeneration");
-exports.addsubject = async (req, res, { models, notifyauser }) => {
+exports.addsubject = async (req, res, { models,io, notifyauser,typechecker }) => {
   const {
     name, // expect a string
     categories, // expect an array of numbers
@@ -7,7 +8,7 @@ exports.addsubject = async (req, res, { models, notifyauser }) => {
     teachers: teachersInput, // expect an object of the form {cate_name: an array of integer}
     compulsory, // expect an object of the form {cate_name: boolean}
   } = req.body;
-  const { Subjects, sequelize, Categories, notifications, Activity } = models;
+  const { Subjects, sequelize, Categories,Notifications,Activities } = models;
 
   try {
     const transaction = await sequelize.transaction();
@@ -67,7 +68,7 @@ exports.addsubject = async (req, res, { models, notifyauser }) => {
             transaction: transaction,
             recipient: parseInt(key),
             roleOfrecipient: 2,
-          });
+          },{typechecker,Activities,Notifications,io});
         }
       }
       await transaction.commit();
@@ -80,13 +81,152 @@ exports.addsubject = async (req, res, { models, notifyauser }) => {
     } catch (error) {
       await transaction.rollback();
       console.error("Inner transaction error:", error);
-      return res.status(500).json({ message: "Transaction could not complete" });
+      return res
+        .status(500)
+        .json({ message: "Transaction could not complete" });
     }
   } catch (error) {
     console.error("Outer transaction error:", error);
     return res.status(500).json({ message: "Unable to start transaction" });
   }
 };
-exports.viewsuject=async(req,res)=>{
+exports.viewsuject = async (req, res, { models }) => {
+  const { username, role } = req.user;
+  const { sequelize, Registeredcourses, Registration, Sessions } = models;
+  const { cate_id, teacherid } = req.params;
 
-}
+  let transaction;
+  try {
+    transaction = await sequelize.transaction();
+    let query;
+    let results;
+
+    // Admin's case
+    if (role === 1) {
+      if (cate_id) {
+        query = `
+          SELECT subjects.name, subjects.year, teachers.email 
+          FROM subjects 
+          LEFT JOIN teachers ON subjects.teacherid = teachers.id 
+          WHERE subjects.category_id = :categoryId 
+          ORDER BY subjects.category_id, subjects.year ASC
+        `;
+        results = await sequelize.query(query, {
+          replacements: { categoryId: cate_id },
+          type: sequelize.QueryTypes.SELECT,
+          transaction,
+        });
+      } else {
+        query = `
+          SELECT subjects.name, categories.categoryName, subjects.year, teachers.email 
+          FROM subjects 
+          LEFT JOIN categories ON subjects.category_id = categories.id 
+          LEFT JOIN teachers ON subjects.teacherid = teachers.id 
+          ORDER BY subjects.category_id, subjects.year ASC
+        `;
+        results = await sequelize.query(query, {
+          type: sequelize.QueryTypes.SELECT,
+          transaction,
+        });
+      }
+    }
+
+    // Teacher's case
+    else if (role === 2) {
+      query = `
+        SELECT subjects.name, categories.categoryName, subjects.year 
+        FROM subjects 
+        LEFT JOIN categories ON subjects.category_id = categories.id 
+        WHERE subjects.teacherid = :teacherId 
+        ORDER BY subjects.category_id ASC
+      `;
+      results = await sequelize.query(query, {
+        replacements: { teacherId: teacherid },
+        type: sequelize.QueryTypes.SELECT,
+        transaction,
+      });
+    }
+
+    // Student's case
+    else if (role === 3) {
+      const student_detail = await Registration.findOne({
+        where: { regNo: username },
+        transaction,
+      });
+      const active_session = await Sessions.findOne({
+        where: { active: true },
+        transaction,
+      });
+
+      if (student_detail && active_session) {
+        query = `
+          SELECT subjects.id, subjects.name, subjects.year, subjects.department_id, subjects.compulsory, teachers.fname 
+          FROM subjects 
+          LEFT JOIN teachers ON subjects.teacherid = teachers.id 
+          WHERE subjects.category_id = :categoryId
+        `;
+        const allSubjects = await sequelize.query(query, {
+          replacements: { categoryId: student_detail["category_id"] },
+          type: sequelize.QueryTypes.SELECT,
+          transaction,
+        });
+
+        const electiveSubjects = await Registeredcourses.findAll({
+          where: {
+            student_id: student_detail["id"],
+            sessionName: active_session["sessionName"],
+          },
+          attributes: ["subject_id"],
+          transaction,
+        });
+
+        const studentsubjects = allSubjects
+          .filter(
+            (detail) =>
+              (detail.year === student_detail["year"] &&
+                (detail.department_id === student_detail["department_id"] || detail.department_id === 0) &&
+                detail.compulsory === true) ||
+              electiveSubjects.some((item) => item.subject_id === detail.id)
+          )
+          .map((content) => ({
+            subject: content["name"],
+            teacher: content["fname"],
+          }));
+
+        if (studentsubjects.length > 0) {
+          await transaction.commit();
+          return res.status(200).json({ data: studentsubjects });
+        } else {
+          await transaction.rollback();
+          return res.status(404).json({ message: "No subject matches your criteria" });
+        }
+      } else {
+        await transaction.rollback();
+        return res.status(404).json({ message: "Invalid student detail or no active session" });
+      }
+    }
+
+    // Handle cases where no role matches
+    else {
+      await transaction.rollback();
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    // Success response for admin and teacher roles
+    if (results && results.length > 0) {
+      await transaction.commit();
+      return res.status(200).json({ data: results });
+    } else {
+      await transaction.rollback();
+      return res.status(400).json({
+        message: "There is no subject that matches your description",
+      });
+    }
+  } catch (error) {
+    if (transaction) await transaction.rollback();
+    console.error("Error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
