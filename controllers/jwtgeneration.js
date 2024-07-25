@@ -2,21 +2,43 @@ const express = require("express");
 const dotenv = require("dotenv");
 const Registration = require("../models/registration.js");
 const Notifications = require("../models/notification.js");
-const { Server } = require('socket.io');
+const { Server } = require("socket.io");
 const Class = require("../models/class.js");
-const app = express()
-const { createServer } = require('http');
+const app = express();
+const { createServer } = require("http");
 const server = createServer(app);
- exports.io = new Server(server);
+exports.io = new Server(server);
 const jwt = require("jsonwebtoken");
 const jwtSecretKey = process.env.JWT_SECRET_KEY;
-exports.generateToken = (mainpayload) => {
+exports.generateToken = (mainpayload, { typechecker }) => {
   const { userid, username, role } = mainpayload;
-  let jwtSecretKey = process.env.JWT_SECRET_KEY;
-  const expiration = "1h";
-  const payload = { userid, username, role };
-  const token = jwt.sign(payload, jwtSecretKey, { expiresIn: expiration });
-  return token;
+  try {
+    // Use typechecker to validate the payload
+    typechecker({ userid, username, role }, [
+      { key: "userid", type: "number" },
+      { key: "username", type: "string" },
+      { key: "role", type: "number" }, // Assuming role is a string, update if necessary
+    ]);
+
+    // Ensure JWT secret key is available
+     const jwtSecretKey = process.env.JWT_SECRET_KEY;
+    if (!jwtSecretKey) {
+      throw new Error(
+        "JWT_SECRET_KEY is not defined in the environment variables."
+      );
+    }
+
+    // Define expiration and payload
+    const expiration = "1h";
+    const payload = { userid, username, role };
+
+    // Generate the JWT token
+    const token = jwt.sign(payload, jwtSecretKey, { expiresIn: expiration });
+    return token;
+  } catch (error) {
+    console.error("Error:", error);
+    throw new Error("An error occurred during token generation");
+  }
 };
 exports.assignClass = async (main) => {
   // ------- test the attribute of the function------------
@@ -220,7 +242,9 @@ exports.notifyAllParties = async (dep) => {
       // Notify subject teachers
       if (subjects.length > 0) {
         const promises = subjects.map((subject) => {
-          this.io.to(`subject_${subject.id}`).emit(`${author} ${subjectsmessage}`);
+          this.io
+            .to(`subject_${subject.id}`)
+            .emit(`${author} ${subjectsmessage}`);
           return Notifications.create(
             {
               activity_id: activity_id,
@@ -383,7 +407,7 @@ exports.teacherselect = async (arg) => {
     for (const teacherid of teacherids) {
       const subjects_taken = await Subjects.findAll({
         where: { id: teacherid },
-        transaction
+        transaction,
       });
 
       if (subjects_taken.length === 0) {

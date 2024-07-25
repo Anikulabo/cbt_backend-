@@ -1,4 +1,4 @@
-const { generateToken } = require("./jwtgeneration");
+const { typechecker,generateToken } = require("./jwtgeneration");
 const { sequelize } = require("../models");
 const Registration = require("../models/registration");
 const Registeredcourses = require("../models/registeredcourses.");
@@ -11,7 +11,7 @@ const bcrypt = require("bcrypt");
 const Subjects = require("../models/subjects");
 exports.loginuser = async (req, res) => {
   const { regno, password } = req.body;
-  console.log({ regno, password })
+  console.log({ regno, password });
   try {
     // Attempt to find the user in the database
     const detail = await Users.findOne({ where: { regNo: regno } });
@@ -31,10 +31,14 @@ exports.loginuser = async (req, res) => {
         username: detail.regNo,
         role: detail.role,
       };
-      const token = generateToken(payload);
+      const token = generateToken(payload,{typechecker});
       return res
         .status(200)
-        .json({ message: "login successfully", token: token,role:payload['role'] });
+        .json({
+          message: "login successfully",
+          token: token,
+          userdetail:payload
+        });
     } else {
       // Handle incorrect password case
       return res.status(401).json({ message: "incorrect password" });
