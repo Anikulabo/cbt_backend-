@@ -1,4 +1,4 @@
-const { typechecker,generateToken } = require("./jwtgeneration");
+const { typechecker, generateToken } = require("./jwtgeneration");
 const { sequelize } = require("../models");
 const Registration = require("../models/registration");
 const Registeredcourses = require("../models/registeredcourses.");
@@ -9,6 +9,7 @@ const Score = require("../models/scores");
 const Users = require("../models/users");
 const bcrypt = require("bcrypt");
 const Subjects = require("../models/subjects");
+const Class = require("../models/class");
 exports.loginuser = async (req, res) => {
   const { regno, password } = req.body;
   console.log({ regno, password });
@@ -31,14 +32,12 @@ exports.loginuser = async (req, res) => {
         username: detail.regNo,
         role: detail.role,
       };
-      const token = generateToken(payload,{typechecker});
-      return res
-        .status(200)
-        .json({
-          message: "login successfully",
-          token: token,
-          userdetail:payload
-        });
+      const token = generateToken(payload, { typechecker });
+      return res.status(200).json({
+        message: "login successfully",
+        token: token,
+        userdetail: payload,
+      });
     } else {
       // Handle incorrect password case
       return res.status(401).json({ message: "incorrect password" });
@@ -176,115 +175,110 @@ exports.cbtlogin = async (req, res) => {
   }
 };
 exports.viewuser = async (req, res) => {
-  const { id } = req.params;
-  const { searchrole, session_id } = req.body;
-  const { user_id, username, role } = req.payload;
+  const { id, searchrole } = req.params;
+
+  // Start transaction
+  const transaction = await sequelize.transaction();
 
   try {
-    const transaction = await sequelize.transaction();
-    try {
-      if (id) {
-        if (searchrole === 2) {
-          const teacher = await Teachers.findOne({
-            where: { id },
-            transaction,
-          });
-          if (teacher) {
-            await transaction.commit();
-            return res.status(200).json({ teacher });
-          } else {
-            await transaction.rollback();
-            return res.status(404).json({
-              message: "No teacher found with such details in our database.",
-            });
-          }
-        }
+    let result;
 
-        if (searchrole === 3) {
-          const student = await Registration.findOne({
-            where: { id },
-            transaction,
+    if (id && id !== '0') {
+      if (searchrole === '2') {
+        const teacher = await Teachers.findOne({
+          where: { id },
+          attributes: ["fname", "lname", "email", "phoneNo", "address"],
+          transaction,
+        });
+
+        const subjects = await Subjects.findAll({
+          where: { teacherid: id },
+          transaction,
+        });
+
+        const classes = await Class.findOne({
+          where: { teacherid: id },
+          transaction,
+        });
+
+        if (teacher) {
+          await transaction.commit();
+          return res.status(200).json({
+            teacherdetail: teacher,
+            totalsubjects: subjects.length,
+            handling: classes ? classes.name : 'N/A',
           });
-          if (student) {
-            await transaction.commit();
-            return res.status(200).json({ student });
-          } else {
-            await transaction.rollback();
-            return res
-              .status(404)
-              .json({ message: "No student fits such profile." });
-          }
+        } else {
+          await transaction.rollback();
+          return res.status(404).json({
+            message: "No teacher found with such details in our database.",
+          });
         }
       }
 
-      if (user_id && role === 3 && session_id) {
-        const profile = await Registration.findOne({
-          where: { regNo: username },
-          transaction,
-        });
-        const sessionDetail = await Sessions.findOne({
-          where: { id: session_id },
-          transaction,
-        });
-
-        if (!sessionDetail) {
-          await transaction.rollback();
-          return res
-            .status(404)
-            .json({ message: "There is no such session in our database." });
-        }
-
-        const electedCourses = await Registeredcourses.findAll({
-          where: {
-            student_id: profile.id,
-            sessionName: sessionDetail.sessionName,
-          },
-          transaction,
-        });
-
+      if (searchrole === '3') {
         const query = `
-          SELECT subjects.name as subject, teachers.fname as firstname, subjects.category_id, 
-                 subjects.department_id, subjects.compulsory, teachers.lname as lastname 
-          FROM subjects 
-          LEFT JOIN teachers ON subjects.teacherid = teachers.id 
-          WHERE subjects.category_id = ${profile.category_id} 
-            AND subjects.year = ${profile.year};
+          SELECT registration.first_name, registration.last_name, category.categoryName, departments.name as department,
+          registration.year, registration.sex, registration.DOB, registration.email, registration.address,
+          classes.name as class, session.sessionName as session
+          FROM registration
+          LEFT JOIN categories ON registration.category_id = categories.id
+          LEFT JOIN departments ON registration.department_id = departments.id
+          LEFT JOIN classes ON registration.class_id = classes.id
+          LEFT JOIN sessions ON registration.session_id = sessions.id
+          WHERE registration.id = :Id
         `;
 
-        const allSubjects = await Subjects.sequelize.query(query, {
+        const studentdetails = await sequelize.query(query, {
+          replacements: { Id: id },
           type: sequelize.QueryTypes.SELECT,
           transaction,
         });
 
-        if (allSubjects.length > 0) {
-          const specificSubjects = allSubjects.filter(
-            (detail) =>
-              (detail.department_id === profile.department_id ||
-                detail.department_id === 0) &&
-              detail.compulsory === true &&
-              electedCourses.length > 0 &&
-              electedCourses.some((course) => course.subject_id === detail.id)
-          );
-
+        if (studentdetails.length > 0) {
           await transaction.commit();
-          return res.status(200).json({ subject_teachers: specificSubjects });
+          return res.status(200).json({ detail: studentdetails });
         } else {
           await transaction.rollback();
           return res.status(404).json({
-            message: "Your category has no subject offered under it.",
+            message: "No student fits such profile.",
           });
         }
       }
-    } catch (error) {
-      await transaction.rollback();
-      console.error("Error:", error);
-      return res
-        .status(500)
-        .json({ message: "An error occurred during the transaction." });
+    } else {
+      if (searchrole === '2') {
+        result = await Teachers.findAll({
+          attributes: ["fname", "lname", "staff_id"],
+          transaction,
+        });
+      } else if (searchrole === '3') {
+        result = await Registration.findAll({
+          attributes: ["first_name", "last_name", "regNo"],
+          transaction,
+        });
+      } else {
+        result = [];
+      }
+
+      if (result.length > 0) {
+        await transaction.commit();
+        return res.status(200).json({ detail: result });
+      } else {
+        await transaction.commit();
+        return res.status(404).json({
+          message: searchrole === '3'
+            ? "You've not registered any student to your database."
+            : "You've not registered any teacher to your database.",
+        });
+      }
     }
   } catch (error) {
+    await transaction.rollback();
     console.error("Error:", error);
-    return res.status(500).json({ message: "Internal server error." });
+    return res.status(500).json({
+      message: "An error occurred during the transaction.",
+    });
   }
 };
+
 exports.deleteuser = async (req, res) => {};

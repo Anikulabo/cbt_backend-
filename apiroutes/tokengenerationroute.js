@@ -3,6 +3,7 @@ const createToken = async (req, res) => {
   const { userid, username, role } = req.body;
   try {
     let result = generateToken({ userid, username, role },{typechecker});
+    console.log("generating token");
     return res.status(200).json({ token: result });
   } catch (error) {
     console.error("error:", error);

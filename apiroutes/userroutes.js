@@ -7,8 +7,9 @@ const {
 } = require("../controllers/userscontroller");
 const {
     generalauthentication,
+    adminauthentication
   } = require("../controllers/jwtgeneration");
   userroutes.post('/',loginuser);
   userroutes.get('/cbt',cbtlogin);
-  //userroutes.get('/:id',generalauthentication,viewuser);
+  userroutes.get('/:id/:searchrole',adminauthentication,viewuser);
   module.exports = userroutes;

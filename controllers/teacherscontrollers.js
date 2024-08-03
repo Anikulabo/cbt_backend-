@@ -3,8 +3,8 @@ const { Teachers } = require("../models/teachers");
 const { Users } = require("../models/users");
 const { sequelize } = require("../models");
 const { Op } = require("sequelize");
-const {objectreducer}=require('./jwtgeneration');
-const bcrypt = require('bcrypt');
+const { objectreducer } = require("./jwtgeneration");
+const bcrypt = require("bcrypt");
 const { Class } = require("../models/class");
 const { Subjects } = require("../models/subjects");
 exports.addteacher = async (req, res) => {
@@ -31,11 +31,6 @@ exports.addteacher = async (req, res) => {
       });
       const lastRowId = lastRow ? lastRow.id : 0; // Default to 0 if no rows found
       const staff_id = `${sessionName.slice(0, 4)}${lastRowId}`;
-      let role = null;
-      if (category_id === 0) {
-        // then it is  the head teacher
-        role = 1;
-      }
       await Teachers.create(
         {
           fname,
@@ -54,7 +49,7 @@ exports.addteacher = async (req, res) => {
         email: email,
         password: hashedPassword,
         regNo: staff_id,
-        role: 2,
+        role: category_id === 0 ? 1 : 2,
       });
       await transaction.commit();
       return res
@@ -209,9 +204,10 @@ exports.updateteacher = async (req, res) => {
     const transaction = await sequelize.transaction();
     try {
       // Get the initial info of the teacher
-      const initialDetail = await Teachers.findOne(
-        { where: { id }, transaction }
-      );
+      const initialDetail = await Teachers.findOne({
+        where: { id },
+        transaction,
+      });
 
       const incomingChanges = {
         fname,
@@ -232,33 +228,45 @@ exports.updateteacher = async (req, res) => {
         !allchanges.changeditems.includes("category_id") &&
         !allchanges.changeditems.includes("department_id")
       ) {
-        await Teachers.update(allchanges.newobject, { where: { id }, transaction });
+        await Teachers.update(allchanges.newobject, {
+          where: { id },
+          transaction,
+        });
         // Commit transaction
         await transaction.commit();
-        return res
-          .status(200)
-          .json({
-            message: `The teacher's ${allchanges.changeditems} has been updated successfully`,
-          });
+        return res.status(200).json({
+          message: `The teacher's ${allchanges.changeditems} has been updated successfully`,
+        });
       } else {
         // Logic when the category and department of the teacher is changed
 
         // Check the teacher's previous records
-        const formercls = await Class.findOne(
-          { where: { teacherid: id }, transaction }
-        );
-        const formersubjects = await Subjects.findAll(
-          { where: { teacherid: id }, transaction }
-        );
+        const formercls = await Class.findOne({
+          where: { teacherid: id },
+          transaction,
+        });
+        const formersubjects = await Subjects.findAll({
+          where: { teacherid: id },
+          transaction,
+        });
 
-        await Teachers.update(allchanges.newobject, { where: { id }, transaction });
-        
+        await Teachers.update(allchanges.newobject, {
+          where: { id },
+          transaction,
+        });
+
         if (formercls) {
-          await Class.update({ teacherid: 0 }, { where: { teacherid: id }, transaction });
+          await Class.update(
+            { teacherid: 0 },
+            { where: { teacherid: id }, transaction }
+          );
         }
 
         if (formersubjects.length > 0) {
-          await Subjects.update({ teacherid: 0 }, { where: { teacherid: id }, transaction });
+          await Subjects.update(
+            { teacherid: 0 },
+            { where: { teacherid: id }, transaction }
+          );
         }
 
         const allsubjects = formersubjects.map((subject) => subject.name);
@@ -267,11 +275,11 @@ exports.updateteacher = async (req, res) => {
         await transaction.commit();
 
         // Give a successful message with consequences of action
-        return res
-          .status(200)
-          .json({
-            message: `Update was successful but ${allsubjects.join(', ')} and ${formercls?.name || 'N/A'} have no teacher`,
-          });
+        return res.status(200).json({
+          message: `Update was successful but ${allsubjects.join(", ")} and ${
+            formercls?.name || "N/A"
+          } have no teacher`,
+        });
       }
     } catch (error) {
       await transaction.rollback();
@@ -288,4 +296,3 @@ exports.updateteacher = async (req, res) => {
       .json({ message: "Internal server error", error: error.message });
   }
 };
-

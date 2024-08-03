@@ -130,16 +130,14 @@ exports.deleteclass = async (req, res) => {
       );
       if (pastrecord) {
         await transaction.rollback();
-        return res
-          .status(400)
-          .json({
-            message:
-              "class already have some records so it can't be deleted you can only update it",
-          });
-      }else{
-        await Class.destroy({ where: { id } },transaction);
-        await transaction.commit()
-        return res.status(201).json({ message: "class successfully deleted" })        
+        return res.status(400).json({
+          message:
+            "class already have some records so it can't be deleted you can only update it",
+        });
+      } else {
+        await Class.destroy({ where: { id } }, transaction);
+        await transaction.commit();
+        return res.status(201).json({ message: "class successfully deleted" });
       }
     } catch (error) {
       await transaction.rollback();
@@ -152,16 +150,30 @@ exports.deleteclass = async (req, res) => {
   }
 };
 exports.viewclasses = async (req, res) => {
-  const { className } = req.params;
+  const { cate_id } = req.params;
   // Construct a parameterized query
-  const query = "SELECT * FROM class WHERE class LIKE :className";
+  let query, results;
   try {
     // Execute the query with parameters
-    const results = await Class.sequelize.query(query, {
-      type: Sequelize.QueryTypes.SELECT,
-      replacements: { className: `%${className}%` }, // Pass the className as a parameter
-    });
-    return res.status(200).json({ classes: results });
+    if (cate_id) {
+      query =
+        "SELECT classes.id,classes.name,classes.year,departments.name as department FROM classes LEFT JOIN departments on classes.department_id=departments.id  WHERE classes.category_id =:cate_id";
+      results = await Class.sequelize.query(query, {
+        type: Sequelize.QueryTypes.SELECT,
+        replacements: { cate_id: cate_id }, // Pass the className as a parameter
+      });
+    } else {
+      query =
+        "SELECT classes.id,classes.name,classes.year,departments.name as department,categories.categoryName FROM classes LEFT JOIN categories ON classes.category_id=categories.id,LEFT join departments on classes.department_id=departments.id";
+      results = await Class.sequelize.query(query, {
+        type: Sequelize.QueryTypes.SELECT,
+      });
+    }
+    return results.length > 0
+      ? res.status(200).json({ details: results })
+      : res
+          .status(404)
+          .json({ message: "there is no class under such criteria" });
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ error: "Internal server error" });
