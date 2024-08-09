@@ -280,5 +280,4 @@ exports.viewuser = async (req, res) => {
     });
   }
 };
-
 exports.deleteuser = async (req, res) => {};

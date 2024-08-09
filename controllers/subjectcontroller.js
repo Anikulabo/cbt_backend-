@@ -1,6 +1,11 @@
-const { where } = require("sequelize");
 const teacherselect = require("./jwtgeneration");
-exports.addsubject = async (req, res, { models,io, notifyauser,typechecker }) => {
+const Subjects = require("../models/subjects");
+const { where } = require("sequelize");
+exports.addsubject = async (
+  req,
+  res,
+  { models, io, notifyauser, typechecker }
+) => {
   const {
     name, // expect a string
     categories, // expect an array of numbers
@@ -8,7 +13,7 @@ exports.addsubject = async (req, res, { models,io, notifyauser,typechecker }) =>
     teachers: teachersInput, // expect an object of the form {cate_name: an array of integer}
     compulsory, // expect an object of the form {cate_name: boolean}
   } = req.body;
-  const { Subjects, sequelize, Categories,Notifications,Activities } = models;
+  const { Subjects, sequelize, Categories, Notifications, Activities } = models;
 
   try {
     const transaction = await sequelize.transaction();
@@ -61,14 +66,17 @@ exports.addsubject = async (req, res, { models,io, notifyauser,typechecker }) =>
         }
 
         for (const [key, value] of Object.entries(teachersMap)) {
-          await notifyauser({
-            description: `You've been assigned to teach ${value.length} subjects. Check portal for more details.`,
-            performed_by: 0,
-            roleOfperformer: 0,
-            transaction: transaction,
-            recipient: parseInt(key),
-            roleOfrecipient: 2,
-          },{typechecker,Activities,Notifications,io});
+          await notifyauser(
+            {
+              description: `You've been assigned to teach ${value.length} subjects. Check portal for more details.`,
+              performed_by: 0,
+              roleOfperformer: 0,
+              transaction: transaction,
+              recipient: parseInt(key),
+              roleOfrecipient: 2,
+            },
+            { typechecker, Activities, Notifications, io }
+          );
         }
       }
       await transaction.commit();
@@ -93,41 +101,75 @@ exports.addsubject = async (req, res, { models,io, notifyauser,typechecker }) =>
 exports.viewsuject = async (req, res, { models }) => {
   const { username, role } = req.user;
   const { sequelize, Registeredcourses, Registration, Sessions } = models;
-  const { cate_id, teacherid } = req.params;
-
+  const { name, teacherid } = req.params;
   let transaction;
   try {
     transaction = await sequelize.transaction();
     let query;
     let results;
-
     // Admin's case
     if (role === 1) {
-      if (cate_id) {
+      if (name !== "") {
         query = `
-          SELECT subjects.name, subjects.year, teachers.email 
+          SELECT subjects.id, teachers.fname as teacher, categories.categoryName, departments.name as department, subjects.year 
           FROM subjects 
           LEFT JOIN teachers ON subjects.teacherid = teachers.id 
-          WHERE subjects.category_id = :categoryId 
-          ORDER BY subjects.category_id, subjects.year ASC
-        `;
-        results = await sequelize.query(query, {
-          replacements: { categoryId: cate_id },
-          type: sequelize.QueryTypes.SELECT,
-          transaction,
-        });
-      } else {
-        query = `
-          SELECT subjects.name, categories.categoryName, subjects.year, teachers.email 
-          FROM subjects 
           LEFT JOIN categories ON subjects.category_id = categories.id 
-          LEFT JOIN teachers ON subjects.teacherid = teachers.id 
-          ORDER BY subjects.category_id, subjects.year ASC
+          LEFT JOIN departments ON subjects.department_id = departments.id 
+          WHERE subjects.name = :name
         `;
-        results = await sequelize.query(query, {
+
+        const teachersDetail = await sequelize.query(query, {
+          replacements: { name },
           type: sequelize.QueryTypes.SELECT,
           transaction,
         });
+
+        for (const item of teachersDetail) {
+          let studentTakingCourse;
+
+          const detailOfSubject = await Subjects.findOne({
+            where: { id: item["id"] },
+            transaction,
+          });
+
+          if (detailOfSubject["compulsory"]) {
+            studentTakingCourse = await Registration.findAll({
+              where: {
+                category_id: detailOfSubject["category_id"],
+                year: detailOfSubject["year"],
+                ...(detailOfSubject["department_id"] !== 0 && {
+                  department_id: detailOfSubject["department_id"],
+                }),
+              },
+              transaction,
+            });
+          } else {
+            const activeSession = await Sessions.findOne({
+              where: { active: true },
+              transaction,
+            });
+
+            studentTakingCourse = await Registeredcourses.findAll({
+              where: {
+                subject_id: item["id"],
+                sessionName: activeSession["sessionName"],
+              },
+              transaction,
+            });
+          }
+
+          item["student_taking_course"] = studentTakingCourse.length;
+        }
+
+        results = { name, teachersDetail };
+      } else {
+        const allSubjects = await Subjects.findAll({
+          attributes: ["id", "name"],
+          transaction,
+        });
+
+        results = [...new Set(allSubjects.map(({ name }) => name))];
       }
     }
 
@@ -146,7 +188,6 @@ exports.viewsuject = async (req, res, { models }) => {
         transaction,
       });
     }
-
     // Student's case
     else if (role === 3) {
       const student_detail = await Registration.findOne({
@@ -184,7 +225,8 @@ exports.viewsuject = async (req, res, { models }) => {
           .filter(
             (detail) =>
               (detail.year === student_detail["year"] &&
-                (detail.department_id === student_detail["department_id"] || detail.department_id === 0) &&
+                (detail.department_id === student_detail["department_id"] ||
+                  detail.department_id === 0) &&
                 detail.compulsory === true) ||
               electiveSubjects.some((item) => item.subject_id === detail.id)
           )
@@ -198,11 +240,15 @@ exports.viewsuject = async (req, res, { models }) => {
           return res.status(200).json({ data: studentsubjects });
         } else {
           await transaction.rollback();
-          return res.status(404).json({ message: "No subject matches your criteria" });
+          return res
+            .status(404)
+            .json({ message: "No subject matches your criteria" });
         }
       } else {
         await transaction.rollback();
-        return res.status(404).json({ message: "Invalid student detail or no active session" });
+        return res
+          .status(404)
+          .json({ message: "Invalid student detail or no active session" });
       }
     }
 
@@ -228,5 +274,3 @@ exports.viewsuject = async (req, res, { models }) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
-
-

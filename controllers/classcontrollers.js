@@ -150,30 +150,51 @@ exports.deleteclass = async (req, res) => {
   }
 };
 exports.viewclasses = async (req, res) => {
-  const { cate_id } = req.params;
-  // Construct a parameterized query
+  const { id } = req.params;
   let query, results;
+
   try {
-    // Execute the query with parameters
-    if (cate_id) {
-      query =
-        "SELECT classes.id,classes.name,classes.year,departments.name as department FROM classes LEFT JOIN departments on classes.department_id=departments.id  WHERE classes.category_id =:cate_id";
+    if (id != 0) {
+      // Construct a parameterized query
+      query = `
+        SELECT 
+          classes.id, classes.name, classes.year, 
+          departments.name as department, category.categoryName, 
+          teachers.fname as managedBy 
+        FROM 
+          classes 
+        LEFT JOIN 
+          departments ON classes.department_id = departments.id 
+        LEFT JOIN 
+          category ON classes.category_id = category.id 
+        LEFT JOIN 
+          teachers ON classes.teacherid = teachers.id 
+        WHERE 
+          classes.id = :id 
+        LIMIT 1
+      `;
+
+      // Execute the query with parameters
       results = await Class.sequelize.query(query, {
         type: Sequelize.QueryTypes.SELECT,
-        replacements: { cate_id: cate_id }, // Pass the className as a parameter
+        replacements: { id: id },
       });
+
+      // Check if class details are found
+      if (results.length > 0) {
+        const student_in_class = await Class.findAll({ where: { class_id: id } });
+        results[0]['total_students'] = student_in_class.length;
+
+        return res.status(200).json({ details: results });
+      } else {
+        return res.status(404).json({ message: "No class found under such criteria" });
+      }
     } else {
-      query =
-        "SELECT classes.id,classes.name,classes.year,departments.name as department,categories.categoryName FROM classes LEFT JOIN categories ON classes.category_id=categories.id,LEFT join departments on classes.department_id=departments.id";
-      results = await Class.sequelize.query(query, {
-        type: Sequelize.QueryTypes.SELECT,
-      });
+      // Fetch all classes when id is 0
+      results = await Class.findAll({ attributes: ["id", "name"] });
+
+      return res.status(200).json({ details: results });
     }
-    return results.length > 0
-      ? res.status(200).json({ details: results })
-      : res
-          .status(404)
-          .json({ message: "there is no class under such criteria" });
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ error: "Internal server error" });

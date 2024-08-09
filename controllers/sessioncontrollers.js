@@ -1,6 +1,9 @@
 const { Op } = require("sequelize");
 // Updated notifyauser function with dependency injection
-exports.notifyauser = async (obj, { typechecker, Activities, Notifications, io }) => {
+exports.notifyauser = async (
+  obj,
+  { typechecker, Activities, Notifications, io }
+) => {
   // Define expected keys and their types
   const expectedKeys = [
     { key: "description", type: "string" },
@@ -50,9 +53,21 @@ exports.notifyauser = async (obj, { typechecker, Activities, Notifications, io }
 };
 
 // Ensure proper dependency injection
-exports.addsession = async (req, res, { models, io, assignClass,  notifyauser, notifyallparties }) => {
+exports.addsession = async (
+  req,
+  res,
+  { models, io, assignClass, notifyauser, notifyallparties }
+) => {
   const { sessionName, term } = req.body;
-  const { sequelize, Sessions, Registration, Class, Subjects, Activities, Categories } = models;
+  const {
+    sequelize,
+    Sessions,
+    Registration,
+    Class,
+    Subjects,
+    Activities,
+    Categories,
+  } = models;
 
   let transaction;
   try {
@@ -61,9 +76,10 @@ exports.addsession = async (req, res, { models, io, assignClass,  notifyauser, n
       // Determine if the new session to be uploaded is still the active session
       await Sessions.update({ active: false }, { transaction }); // to make sure every other session is rendered inactive
 
-      const session_in_progress = await Sessions.findAll(
-        { where: { sessionName }, transaction }
-      );
+      const session_in_progress = await Sessions.findAll({
+        where: { sessionName },
+        transaction,
+      });
 
       if (session_in_progress.length > 0) {
         // The admin is just adding a term to an existing session
@@ -72,18 +88,20 @@ exports.addsession = async (req, res, { models, io, assignClass,  notifyauser, n
         // This is for the case where a new session is being added by the admin
 
         // Find all admitted students
-        const admittedusers = await Registration.findAll(
-          { where: { year: { [Op.gt]: 0 } }, transaction }
-        );
+        const admittedusers = await Registration.findAll({
+          where: { year: { [Op.gt]: 0 } },
+          transaction,
+        });
 
         // Find all available classes for admitted users
         const allClasses = await Class.findAll();
 
         // Process user updates
         const userPromises = admittedusers.map(async (user) => {
-          const category = await Categories.findOne(
-            { where: { id: user.category_id }, transaction }
-          );
+          const category = await Categories.findOne({
+            where: { id: user.category_id },
+            transaction,
+          });
 
           if (user.year < category.year) {
             // Increase the year of the student due to new session
@@ -115,8 +133,10 @@ exports.addsession = async (req, res, { models, io, assignClass,  notifyauser, n
               (detail) => detail.id === chosenClass.classid
             );
             if (indexOfChosenClass !== -1) {
-              const initialNumberOfStudents = allClasses[indexOfChosenClass].totalstudents || 0;
-              allClasses[indexOfChosenClass].totalstudents = initialNumberOfStudents + 1;
+              const initialNumberOfStudents =
+                allClasses[indexOfChosenClass].totalstudents || 0;
+              allClasses[indexOfChosenClass].totalstudents =
+                initialNumberOfStudents + 1;
             }
           } else {
             await Registration.update(
@@ -139,20 +159,18 @@ exports.addsession = async (req, res, { models, io, assignClass,  notifyauser, n
 
         // Process class updates
         const classPromises = allClasses.map(async (unique) => {
-          const compulsorySubjects = await Subjects.findAll(
-            {
-              where: {
-                category_id: unique.category_id,
-                year: unique.year,
-                compulsory: true,
-                [Op.or]: [
-                  { department_id: unique.department_id },
-                  { department_id: 0 },
-                ],
-              },
-              transaction
-            }
-          );
+          const compulsorySubjects = await Subjects.findAll({
+            where: {
+              category_id: unique.category_id,
+              year: unique.year,
+              compulsory: true,
+              [Op.or]: [
+                { department_id: unique.department_id },
+                { department_id: 0 },
+              ],
+            },
+            transaction,
+          });
 
           const activity = await Activities.create(
             {
@@ -188,7 +206,9 @@ exports.addsession = async (req, res, { models, io, assignClass,  notifyauser, n
       }
 
       await transaction.commit();
-      return res.status(201).json({ message: "Session has been successfully updated" });
+      return res
+        .status(201)
+        .json({ message: "Session has been successfully updated" });
     } catch (error) {
       await transaction.rollback();
       console.error("Error during session update:", error);
@@ -217,7 +237,9 @@ exports.updatesession = async (req, res, { models, objectreducer }) => {
     // Find the session by id
     const sessionDetail = await Sessions.findOne({ where: { id } });
     if (!sessionDetail) {
-      return res.status(404).json({ message: "No session found with the given ID" });
+      return res
+        .status(404)
+        .json({ message: "No session found with the given ID" });
     }
 
     // Calculate the changes
@@ -250,13 +272,16 @@ exports.updatesession = async (req, res, { models, objectreducer }) => {
     return res.status(200).json({ message: "Session updated successfully" });
   } catch (error) {
     console.error("Error updating session:", error);
-    return res.status(500).json({ message: "An error occurred while updating the session" });
+    return res
+      .status(500)
+      .json({ message: "An error occurred while updating the session" });
   }
 };
 
 // Ensure proper dependency injection
 exports.viewsessions = async (req, res, { models }) => {
-  const { username, userid, role } = req.payload;
+  const { username, userid, role } = req.user;
+  const { name } = req.params;
   const { sequelize, Sessions, Registration, Score } = models;
 
   // Input validation
@@ -266,12 +291,11 @@ exports.viewsessions = async (req, res, { models }) => {
 
   try {
     const transaction = await sequelize.transaction();
+    let results = [];
 
     try {
-      let results = [];
-
+      // Student role
       if (role === 3) {
-        // Query registration details for the student
         const query = `
           SELECT registration.id, categories.categoryName, registration.year, registration.session_id 
           FROM registration 
@@ -286,12 +310,12 @@ exports.viewsessions = async (req, res, { models }) => {
 
         if (details.length === 0) {
           await transaction.rollback();
-          return res.status(404).json({ message: "No registration details found for the student" });
+          return res
+            .status(404)
+            .json({ message: "No registration details found for the student" });
         }
 
         const studentDetails = details[0];
-
-        // Query to get all sessions attended by the student
         const attendedSessions = await Sessions.findAll({
           where: { id: { [Op.gte]: studentDetails.session_id } },
           attributes: ["id", "sessionName", "term"],
@@ -326,11 +350,17 @@ exports.viewsessions = async (req, res, { models }) => {
                 WHERE user_id = :userId AND session_id = :sessionId 
                 LIMIT 1
               `;
-              const pastDetails = await Score.sequelize.query(pastDetailsQuery, {
-                replacements: { userId: studentDetails.id, sessionId: session.id },
-                type: sequelize.QueryTypes.SELECT,
-                transaction,
-              });
+              const pastDetails = await Score.sequelize.query(
+                pastDetailsQuery,
+                {
+                  replacements: {
+                    userId: studentDetails.id,
+                    sessionId: session.id,
+                  },
+                  type: sequelize.QueryTypes.SELECT,
+                  transaction,
+                }
+              );
 
               if (pastDetails.length > 0) {
                 const pastDetail = pastDetails[0];
@@ -344,9 +374,61 @@ exports.viewsessions = async (req, res, { models }) => {
             }
           }
         }
-      } else {
-        // Fetch all sessions for other users
-        results = await Sessions.findAll({ transaction });
+      }
+
+      // Teacher role
+      if (role === 2) {
+        const collatedResult = {};
+        const allSessions = await Sessions.findAll({ transaction });
+
+        const uniqueSessions = [
+          ...new Set(allSessions.map((session) => session["sessionName"])),
+        ];
+
+        for (const session of uniqueSessions) {
+          const termsWithin = allSessions
+            .filter((item) => item["sessionName"] === session)
+            .map(({ id, term }) => ({ id, term }));
+
+          collatedResult[session] = termsWithin;
+        }
+
+        results = collatedResult;
+      }
+
+      // Admin role
+      if (role === 1) {
+        const collatedResult = {};
+
+        if (name) {
+          const allTerms = await Sessions.findAll({
+            where: { sessionName: name },
+            transaction,
+          });
+
+          collatedResult["Terms"] = allTerms.length;
+          const sessionIds = [...new Set(allTerms.map(({ id }) => id))];
+          const studentRegistered = await Registration.findAll({
+            where: {
+              id: {
+                [Op.and]: [
+                  { [Op.gte]: Math.min(...sessionIds) },
+                  { [Op.lte]: Math.max(...sessionIds) },
+                ],
+              },
+            },
+            transaction,
+          });
+
+          collatedResult["StudentRegistered"] = studentRegistered.length;
+        } else {
+          const allSessions = await Sessions.findAll({ transaction });
+          results = [
+            ...new Set(allSessions.map(({ sessionName }) => sessionName)),
+          ];
+        }
+
+        results = collatedResult;
       }
 
       await transaction.commit();
