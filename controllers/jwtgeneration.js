@@ -3,6 +3,9 @@ const dotenv = require("dotenv");
 const Registration = require("../models/registration.js");
 const Notifications = require("../models/notification.js");
 const { Server } = require("socket.io");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 const Class = require("../models/class.js");
 const app = express();
 const { createServer } = require("http");
@@ -21,7 +24,7 @@ exports.generateToken = (mainpayload, { typechecker }) => {
     ]);
 
     // Ensure JWT secret key is available
-     const jwtSecretKey = process.env.JWT_SECRET_KEY;
+    const jwtSecretKey = process.env.JWT_SECRET_KEY;
     if (!jwtSecretKey) {
       throw new Error(
         "JWT_SECRET_KEY is not defined in the environment variables."
@@ -432,3 +435,42 @@ exports.teacherselect = async (arg) => {
     throw error; // Optionally rethrow the error to let the caller handle it
   }
 };
+
+function createUploadMiddleware(externalUploadDir) {
+  // Ensure the directory exists
+  if (!fs.existsSync(externalUploadDir)) {
+    fs.mkdirSync(externalUploadDir, { recursive: true });
+  }
+
+  // Set up multer
+  const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, externalUploadDir); // Use the external directory
+    },
+    filename: function (req, file, cb) {
+      const staffId = req.body.staff_id || "default";
+      cb(null, `${staffId}${path.extname(file.originalname)}`);
+    },
+  });
+
+  return multer({
+    storage: storage,
+    limits: { fileSize: 1000000 }, // Limit file size to 1MB
+    fileFilter: function (req, file, cb) {
+      // Allowed file types
+      const filetypes = /jpeg|jpg|png|gif/;
+      const extname = filetypes.test(
+        path.extname(file.originalname).toLowerCase()
+      );
+      const mimetype = filetypes.test(file.mimetype);
+
+      if (mimetype && extname) {
+        return cb(null, true);
+      } else {
+        cb("Error: Images Only!");
+      }
+    },
+  }).single("image"); // 'image' is the field name in the form
+}
+
+module.exports = createMulterInstance;

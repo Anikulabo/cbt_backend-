@@ -7,121 +7,104 @@ const { objectreducer } = require("./jwtgeneration");
 const bcrypt = require("bcrypt");
 const { Class } = require("../models/class");
 const { Subjects } = require("../models/subjects");
+
+const externalUploadDir = `C:\\Users\\KELVIN\\Documents\\portalfrontend\\src\\components\\img\\users`;
+
+const upload = createUploadMiddleware(externalUploadDir);
 exports.addteacher = async (req, res) => {
-  const {
-    fname,
-    lname,
-    email,
-    phoneNo,
-    address,
-    category_id,
-    department_id,
-    session_id,
-  } = req.body;
-  try {
-    const transaction = await sequelize.transaction();
+  upload(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({ message: err });
+    }
+
+    const {
+      fname,
+      lname,
+      email,
+      phoneNo,
+      address,
+      category_id,
+      department_id,
+      session_id,
+    } = req.body;
+
+    const staff_id = req.body.staff_id; // Ensure this is provided or calculated
     try {
-      const lastRow = await Teachers.findOne({
-        order: [["id", "DESC"]],
-        transaction,
-      });
-      const sessionName = await Sessions.findOne({
-        where: { id: session_id },
-        attributies: ["sessionName"],
-      });
-      const lastRowId = lastRow ? lastRow.id : 0; // Default to 0 if no rows found
-      const staff_id = `${sessionName.slice(0, 4)}${lastRowId}`;
-      await Teachers.create(
-        {
-          fname,
-          lname,
-          email,
-          phoneNo,
-          address,
-          category_id,
-          department_id,
-          staff_id,
-        },
-        { transaction }
-      );
-      const hashedPassword = await bcrypt.hash(fname, 10);
-      await Users.create({
-        email: email,
-        password: hashedPassword,
-        regNo: staff_id,
-        role: category_id === 0 ? 1 : 2,
-      });
-      await transaction.commit();
-      return res
-        .status(200)
-        .json({ message: "the teacher as been successfully registered" });
-    } catch (error) {
-      await transaction.rollback();
-      return res
-        .status(500)
-        .json({ message: "an error occured during registration" });
-    }
-  } catch (error) {
-    console.error("error:", error);
-    return res.status(500).json({ message: "internal server error" });
-  }
-};
-exports.viewteachers = async (req, res) => {
-  const { category_id, department_id } = req.params;
-  // SQL query to select various details from the 'teachers' table and join with 'subjects' and 'classes' tables
-  let query = `SELECT teachers.id, teachers.fname, teachers.lname, teachers.email, teachers.phoneNo, subjects.name as subject, classes.name as class 
-FROM teachers 
-LEFT JOIN subjects on teachers.id = subjects.teacherid 
-LEFT JOIN classes on teachers.id = classes.teacherid`;
-
-  let teachers = [];
-
-  // If a department_id is provided, modify the query to filter by department_id
-  if (department_id) {
-    query = `${query} WHERE teachers.department_id = ${department_id}`;
-  }
-
-  // If a category_id is provided and department_id is 0, modify the query to filter by category_id
-  if (category_id && department_id === 0) {
-    query = `${query} WHERE teachers.department_id = ${category_id}`;
-  }
-
-  try {
-    // Execute the query and store the results
-    const results = await Teachers.sequelize.query(query, {
-      type: sequelize.QueryTypes.SELECT,
-    });
-
-    if (results.length > 0) {
-      // Use a Set to collect unique teacher ids
-      let uniqueIds = new Set(results.map((result) => result.id));
-
-      // Iterate over each unique teacher id
-      for (const id of uniqueIds) {
-        // Filter results to get subjects taken by the current teacher
-        const subject_taken = results
-          .filter((detail) => detail.id === id)
-          .map((info) => info.subject);
-
-        // Get the details of the current teacher
-        const element_detail = results.find((item) => item.id === id);
-
-        // Add the teacher's information to the 'teachers' array
-        teachers.push({
-          id: element_detail.id,
-          fullname: `${element_detail.fname} ${element_detail.lname}`,
-          taking: subject_taken.length,
-          handlingClass: element_detail.class,
+      const transaction = await sequelize.transaction();
+      try {
+        const lastRow = await Teachers.findOne({
+          order: [["id", "DESC"]],
+          transaction,
         });
+
+        const sessionName = await Sessions.findOne({
+          where: { id: session_id },
+          attributes: ["sessionName"],
+          transaction,
+        });
+
+        if (!sessionName) {
+          await transaction.rollback();
+          return res.status(404).json({ message: "Session not found" });
+        }
+
+        const lastRowId = lastRow ? lastRow.id : 0;
+        const computedStaffId = `${sessionName.sessionName.slice(
+          0,
+          4
+        )}${lastRowId}`;
+
+        // Create the teacher record with staff_id
+        await Teachers.create(
+          {
+            fname,
+            lname,
+            email,
+            phoneNo,
+            address,
+            category_id,
+            department_id,
+            staff_id: computedStaffId, // Save computed staff_id
+          },
+          { transaction }
+        );
+
+        // Create the user record
+        const hashedPassword = await bcrypt.hash(fname, 10);
+        await Users.create({
+          email: email,
+          password: hashedPassword,
+          regNo: computedStaffId,
+          role: category_id === 0 ? 1 : 2,
+        });
+
+        await transaction.commit();
+
+        // Rename the file to match the staff_id
+        if (req.file) {
+          const oldPath = req.file.path;
+          const newPath = path.join(
+            externalUploadDir,
+            `${computedStaffId}${path.extname(req.file.originalname)}`
+          );
+          fs.renameSync(oldPath, newPath);
+        }
+
+        return res
+          .status(200)
+          .json({ message: "The teacher has been successfully registered" });
+      } catch (error) {
+        await transaction.rollback();
+        console.error("Error during registration:", error);
+        return res
+          .status(500)
+          .json({ message: "An error occurred during registration" });
       }
-      // Send the response with the 'teachers' data
-      return res.status(200).json({ data: teachers });
+    } catch (error) {
+      console.error("Error starting transaction:", error);
+      return res.status(500).json({ message: "Internal server error" });
     }
-  } catch (error) {
-    // Handle any errors that occurred during the query execution
-    console.error("Error executing query:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
-  }
+  });
 };
 exports.deleteteachers = async (req, res) => {
   const { id } = req.params;
