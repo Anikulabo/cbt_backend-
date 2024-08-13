@@ -1,4 +1,4 @@
-const { typechecker, generateToken } = require("../controllers/jwtgeneration");
+const { typechecker, generateToken } = require("./authorization");
 const createToken = async (req, res) => {
   const { userid, username, role } = req.body;
   try {

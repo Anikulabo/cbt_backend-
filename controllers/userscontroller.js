@@ -10,7 +10,7 @@ const Users = require("../models/users");
 const bcrypt = require("bcrypt");
 const Subjects = require("../models/subjects");
 const Class = require("../models/class");
-exports.loginuser = async (req, res) => {
+exports.loginuser = async (req, res,{typechecker,generateToken}) => {
   const { regno, password } = req.body;
   console.log({ regno, password });
   try {

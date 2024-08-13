@@ -1,16 +1,25 @@
 const express = require("express");
+const bodyParser = require("body-parser");
 const teachersroute = express.Router();
 const {
+  generalauthentication,
+  adminauthentication,
+} = require("./authorization");
+const {
   addteacher,
-  viewteachers,
-  deleteteachers,
   updateteacher,
 } = require("../controllers/teacherscontrollers");
-teachersroute.post("/",  addteacher);
-teachersroute.put("/:id",updateteacher);
-//aroutes opned to  general/all users in general
-teachersroute.get("/:category_id/:department_id" , viewteachers);
-teachersroute.delete('/:id',deleteteachers);
+const multer = require("multer");
+const upload = multer({
+  storage: multer.memoryStorage(), // Store files in memory
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB limit
+});
+// Use body-parser middleware
+teachersroute.use(bodyParser.json());
+teachersroute.use(bodyParser.urlencoded({ extended: true }));
 
+// Routes
+teachersroute.post("/", adminauthentication, upload.single("file"), addteacher);
+teachersroute.put("/:id", updateteacher);
 
 module.exports = teachersroute;

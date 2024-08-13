@@ -1,18 +1,17 @@
 const dotenv = require("dotenv");
 dotenv.config(); // Load environment variables
-
+const fs = require('fs');
 const express = require("express");
 const cors = require("cors");
 const { createServer } = require("http");
 const { Server } = require("socket.io");
 const path = require("path");
 const bodyParser = require("body-parser");
-
 const port = process.env.PORT || 3001;
 const app = express();
 const server = createServer(app);
 const io = new Server(server);
-
+const subjecticonUploadDir = path.join(__dirname, 'uploads', 'subjects');
 // Import routes
 const notificationroutes = require("./apiroutes/notificationroute");
 const registrationroutes = require("./apiroutes/registratioroute");
@@ -62,7 +61,31 @@ app.use("/user", userroutes);
 app.use("/subject", subjectsroutes);
 app.use("/teacher", teachersroute);
 // Serve static files from the React app
+app.use('/img/subjects', express.static(path.join(__dirname, 'uploads', 'subjects')));
+app.get('/subjectsicon', (req, res) => {
+  fs.readdir(path.join(__dirname, 'uploads', 'subjects'), (err, files) => {
+    if (err) {
+      return res.status(500).json({ message: 'Error reading directory' });
+    }
+
+    // Filter out non-image files if necessary
+    const imageFiles = files.filter(file => /\.(jpg|jpeg|png|gif)$/i.test(file));
+
+    // Generate URL for each image file
+    const imageFilesWithUrls = imageFiles.reduce((acc, file) => {
+      const url = `/img/subjects/${file}`; // URL path to access the image
+      acc[file] = url;
+      return acc;
+    }, {});
+
+    // Return the image files with URLs
+    res.json(imageFilesWithUrls);
+  });
+});
+
+
 app.use(express.static(path.join(__dirname, "client", "build")));
+
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "client/build/index.html"));
 });

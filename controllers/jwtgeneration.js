@@ -13,6 +13,95 @@ const server = createServer(app);
 exports.io = new Server(server);
 const jwt = require("jsonwebtoken");
 const jwtSecretKey = process.env.JWT_SECRET_KEY;
+exports.typechecker = (incomingobject, expectedkeys) => {
+  // An array to accept the good keys
+  const goodkeys = [];
+
+  // Check if expectedkeys is an array
+  if (!Array.isArray(expectedkeys)) {
+    throw new Error(
+      "The second parameter should be an array of objects with key-value pairs of 'key' and 'type'."
+    );
+  }
+
+  // Check for any abnormalities in the expectedkeys array
+  const abnormality = expectedkeys.find(
+    (detail) =>
+      !detail.key ||
+      !detail.type ||
+      (typeof detail.type !== "string" && !Array.isArray(detail.type))
+  );
+  if (abnormality) {
+    throw new Error(
+      `Abnormal key: ${JSON.stringify(
+        abnormality
+      )}. We need an array of objects with keys ['key', 'type'] as the second parameter, and both key and type must be strings.`
+    );
+  }
+
+  // Check if incomingobject is a valid object
+  if (
+    typeof incomingobject !== "object" ||
+    incomingobject === null ||
+    Array.isArray(incomingobject)
+  ) {
+    throw new Error(
+      `The first parameter should be a non null object, but you provided a ${typeof incomingobject} or a null object.`
+    );
+  }
+
+  // Iterate over the keys and values of the incoming object
+  for (const [key, value] of Object.entries(incomingobject)) {
+    const match = expectedkeys.find((element) => element.key === key);
+
+    // Check if the key exists in the expected keys
+    if (!match) {
+      throw new Error(`Your incoming object has an unexpected key: ${key}.`);
+    }
+
+    // Validate the type of the value
+    if (match.type !== "array" && match.type !== typeof value) {
+      throw new Error(
+        `Expected a ${
+          match.type
+        } for key ${key} in the first parameter, but received a ${typeof value}.`
+      );
+    }
+
+    // Special handling for array type
+    if (match.type === "array" && !Array.isArray(value)) {
+      throw new Error(
+        `Expected an array for key ${key} in the incoming object, but received a ${typeof value}.`
+      );
+    }
+    if (value === null) {
+      throw new Error(
+        `expected ${match.type} in key ${key} of the first parameter but you gave a null value`
+      );
+    }
+    // Handle cases where 'type' is an array of acceptable types
+    if (Array.isArray(match.type) && !match.type.includes(typeof value)) {
+      throw new Error(
+        `Expected one of [${match.type.join(
+          ", "
+        )}] for key ${key}, but received ${typeof value}.`
+      );
+    }
+
+    // If all checks pass, add the key to the good keys array
+    goodkeys.push(key);
+  }
+
+  // Check for any missing keys
+  const missingkeys = expectedkeys
+    .map((detail) => detail.key)
+    .filter((key) => !goodkeys.includes(key));
+  if (missingkeys.length > 0) {
+    throw new Error(`You are missing keys [${missingkeys.join(", ")}].`);
+  }
+
+  return goodkeys;
+};
 exports.generateToken = (mainpayload, { typechecker }) => {
   const { userid, username, role } = mainpayload;
   try {
@@ -37,6 +126,7 @@ exports.generateToken = (mainpayload, { typechecker }) => {
 
     // Generate the JWT token
     const token = jwt.sign(payload, jwtSecretKey, { expiresIn: expiration });
+   console.log(token)
     return token;
   } catch (error) {
     console.error("Error:", error);
@@ -305,95 +395,6 @@ exports.objectreducer = (prev, current) => {
 
   return { newobject: updatedEntries, changeditems: changes };
 };
-exports.typechecker = (incomingobject, expectedkeys) => {
-  // An array to accept the good keys
-  const goodkeys = [];
-
-  // Check if expectedkeys is an array
-  if (!Array.isArray(expectedkeys)) {
-    throw new Error(
-      "The second parameter should be an array of objects with key-value pairs of 'key' and 'type'."
-    );
-  }
-
-  // Check for any abnormalities in the expectedkeys array
-  const abnormality = expectedkeys.find(
-    (detail) =>
-      !detail.key ||
-      !detail.type ||
-      (typeof detail.type !== "string" && !Array.isArray(detail.type))
-  );
-  if (abnormality) {
-    throw new Error(
-      `Abnormal key: ${JSON.stringify(
-        abnormality
-      )}. We need an array of objects with keys ['key', 'type'] as the second parameter, and both key and type must be strings.`
-    );
-  }
-
-  // Check if incomingobject is a valid object
-  if (
-    typeof incomingobject !== "object" ||
-    incomingobject === null ||
-    Array.isArray(incomingobject)
-  ) {
-    throw new Error(
-      `The first parameter should be a non null object, but you provided a ${typeof incomingobject} or a null object.`
-    );
-  }
-
-  // Iterate over the keys and values of the incoming object
-  for (const [key, value] of Object.entries(incomingobject)) {
-    const match = expectedkeys.find((element) => element.key === key);
-
-    // Check if the key exists in the expected keys
-    if (!match) {
-      throw new Error(`Your incoming object has an unexpected key: ${key}.`);
-    }
-
-    // Validate the type of the value
-    if (match.type !== "array" && match.type !== typeof value) {
-      throw new Error(
-        `Expected a ${
-          match.type
-        } for key ${key} in the first parameter, but received a ${typeof value}.`
-      );
-    }
-
-    // Special handling for array type
-    if (match.type === "array" && !Array.isArray(value)) {
-      throw new Error(
-        `Expected an array for key ${key} in the incoming object, but received a ${typeof value}.`
-      );
-    }
-    if (value === null) {
-      throw new Error(
-        `expected ${match.type} in key ${key} of the first parameter but you gave a null value`
-      );
-    }
-    // Handle cases where 'type' is an array of acceptable types
-    if (Array.isArray(match.type) && !match.type.includes(typeof value)) {
-      throw new Error(
-        `Expected one of [${match.type.join(
-          ", "
-        )}] for key ${key}, but received ${typeof value}.`
-      );
-    }
-
-    // If all checks pass, add the key to the good keys array
-    goodkeys.push(key);
-  }
-
-  // Check for any missing keys
-  const missingkeys = expectedkeys
-    .map((detail) => detail.key)
-    .filter((key) => !goodkeys.includes(key));
-  if (missingkeys.length > 0) {
-    throw new Error(`You are missing keys [${missingkeys.join(", ")}].`);
-  }
-
-  return goodkeys;
-};
 exports.teacherselect = async (arg) => {
   try {
     // Ensure no type mismatch
@@ -436,8 +437,9 @@ exports.teacherselect = async (arg) => {
   }
 };
 
-function createUploadMiddleware(externalUploadDir) {
+exports.createUploadMiddleware=(externalUploadDir)=> {
   // Ensure the directory exists
+  console.log("saving image");
   if (!fs.existsSync(externalUploadDir)) {
     fs.mkdirSync(externalUploadDir, { recursive: true });
   }
@@ -472,5 +474,40 @@ function createUploadMiddleware(externalUploadDir) {
     },
   }).single("image"); // 'image' is the field name in the form
 }
+// Middleware to handle base64 image
+const externalUploadDir = path.join(__dirname, "..", "uploads", "users");
 
-module.exports = createMulterInstance;
+// Middleware to handle Base64 image processing
+exports.handleBase64Image = async (req, res, next) => {
+  const { file, staff_id } = req.body;
+  console.log(file)
+  if (file && staff_id) {
+    try {
+      // Process Base64 image data
+      const base64Data = file.replace(/^data:image\/\w+;base64,/, "");
+      const buffer = Buffer.from(base64Data, "base64");
+      const filePath = path.join(externalUploadDir, `${staff_id}${path.extname("image.jpeg")}`);
+
+      await new Promise((resolve, reject) => {
+        fs.writeFile(filePath, buffer, (err) => {
+          if (err) {
+            console.error("Error saving file:", err);
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      });
+
+      // Proceed to the next middleware/handler
+      next();
+    } catch (err) {
+      console.error("Error processing image:", err);
+      return res.status(500).json({ message: "Error processing image" });
+    }
+  } else {
+    // If no image, just proceed
+    next();
+  }
+};
+
