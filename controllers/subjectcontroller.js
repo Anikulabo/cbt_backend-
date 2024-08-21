@@ -165,11 +165,16 @@ exports.viewsuject = async (req, res, { models }) => {
         results = { name, teachersDetail };
       } else {
         const allSubjects = await Subjects.findAll({
-          attributes: ["id", "name"],
           transaction,
         });
 
-        results = [...new Set(allSubjects.map(({ name }) => name))];
+        results = [
+          ...new Set(
+            allSubjects.map((item) => {
+              return item;
+            })
+          ),
+        ];
       }
     }
 

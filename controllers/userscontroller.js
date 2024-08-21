@@ -248,13 +248,11 @@ exports.viewuser = async (req, res) => {
     } else {
       if (searchrole === '2') {
         result = await Teachers.findAll({
-          attributes: ["fname", "lname", "staff_id"],
           transaction,
         });
       } else if (searchrole === '3') {
         result = await Registration.findAll({
-          attributes: ["first_name", "last_name", "regNo"],
-          transaction,
+          transaction
         });
       } else {
         result = [];

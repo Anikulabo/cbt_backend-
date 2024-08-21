@@ -1,11 +1,17 @@
 const { Op } = require("sequelize");
-exports.register = async (
-  req,
-  res,
-  { assignClass, notifyallparties, models }
-) => {
-  const { fname, lname, cate, dept, year, sex, session, DOB, email, address } =
-    req.body;
+exports.register = async (req, res, { assignClass, notifyallparties, models }) => {
+  const {
+    first_name,
+    last_name,
+    category_id,
+    department_id,
+    year,
+    sex,
+    session,
+    DOB,
+    email,
+    address,
+  } = req.body;
   const { userid, username, role } = req.user;
   const {
     Categories,
@@ -15,138 +21,150 @@ exports.register = async (
     Activities,
     sequelize,
   } = models;
+
   try {
     const transaction = await sequelize.transaction();
-    try {
-      const cateYear = await Categories.findOne({
-        where: { id: cate },
-        attributes: ["years"],
-        transaction,
+
+    // Fetch category year and validate
+    const cateYear = await Categories.findOne({
+      where: { id: category_id },
+      attributes: ["years"],
+      transaction,
+    });
+
+    if (!cateYear) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    if (year > cateYear.years) {
+      return res.status(400).json({
+        message: "There is no such class in the category you've chosen",
       });
+    }
 
-      if (!cateYear) {
-        return res.status(404).json({ message: "Category not found" });
-      }
+    // Fetch compulsory subjects
+    const compulsorySubjects = await Subjects.findAll({
+      where: {
+        category_id,
+        year,
+        compulsory: true,
+        [Op.or]: [{ department_id }, { department_id: 0 }],
+      },
+      transaction,
+    });
 
-      if (year > cateYear.years) {
-        return res.status(400).json({
-          message: "There is no such class in the category you've chosen",
-        });
-      }
+    // Fetch session name
+    const sessionRecord = await Sessions.findOne({
+      where: { id: session },
+      attributes: ["sessionName"],
+      transaction,
+    });
 
-      const compulsorySubjects = await Subjects.findAll({
-        where: {
-          category_id: cate,
-          year: year,
-          compulsory: true,
-          [Op.or]: [{ department_id: dept }, { department_id: 0 }],
-        },
-        transaction,
-      });
-      const sessionName = await Sessions.findOne({
-        where: { id: session },
-        attributes: ["sessionName"],
-        transaction,
-      });
+    if (!sessionRecord) {
+      return res.status(404).json({ message: "Session not found" });
+    }
 
-      if (!sessionName) {
-        return res.status(404).json({ message: "Session not found" });
-      }
-      const lastRow = await Registration.findOne({
+    // Get last row ID for registration number
+    const lastRow = await Registration.findOne({
+      order: [["id", "DESC"]],
+      transaction,
+    });
+    const lastRowId = lastRow ? lastRow.id : 0;
+
+    // Determine chosen class
+    const main = { cate: category_id, dept: department_id, year };
+    const choosenClass = await assignClass(main);
+
+    // Handle year = 0 case
+    if (year === 0) {
+      const unadmitted = await Registration.findOne({
+        where: { year: 0 },
         order: [["id", "DESC"]],
         transaction,
       });
-      const lastRowId = lastRow ? lastRow.id : 0;
-      const main = { cate: cate, dept: dept, year: year };
-      const choosenClass = await assignClass(main);
-      if (year === 0) {
-        const unadmitted = await Registration.findOne({
-          where: { year: 0 },
-          order: [["id", "DESC"]],
-          transaction,
-        });
-        const refno = unadmitted ? unadmitted.id : 0;
-        await Registration.create(
-          {
-            first_name: fname,
-            last_name: lname,
-            year: year,
-            sex: sex,
-            session_id: session,
-            regNo: `${sessionName.sessionName.slice(0, 4)}${refno}`,
-            DOB: DOB,
-            email: email,
-            address: address,
-          },
-          { transaction }
-        );
-      }
-
-      const regNo = `${sessionName.sessionName.slice(0, 4)}${lastRowId}${
-        choosenClass.classid
-      }`;
-
+      const refno = unadmitted ? unadmitted.id : 0;
       await Registration.create(
         {
-          first_name: fname,
-          last_name: lname,
-          category_id: cate,
-          department_id: dept,
-          year: year,
-          sex: sex,
-          DOB: DOB,
-          email: email,
-          address: address,
-          class_id: choosenClass.classid,
+          first_name,
+          last_name,
+          year,
+          sex,
           session_id: session,
-          regNo: regNo,
+          regNo: `${sessionRecord.sessionName.slice(0, 4)}${refno}`,
+          DOB,
+          email,
+          address,
         },
         { transaction }
       );
-      const activity = await Activities.create(
-        {
-          description: `${username} just registered a student`,
-          performed_by: userid,
-          createdAt: new Date(),
-          role: role,
-        },
-        { transaction }
-      );
-
-      const dep = {
-        classid: choosenClass.classid,
-        subjects: compulsorySubjects,
-        transaction: transaction,
-        classmessage: "just registered a student to your class",
-        subjectsmessage: "just registered a student to your subject",
-        author: username,
-        activity_id: activity.id,
-        teacherid: choosenClass.teacher,
-      };
-
-      await notifyallparties(dep);
-
-      await transaction.commit();
-
-      return res.status(201).json({
-        message: `Student has been successfully registered with registration number ${regNo} and in class ${choosenClass.classname}`,
-      });
-    } catch (error) {
-      await transaction.rollback();
-      console.error("Error during registration:", error);
-      return res.status(500).json({
-        message: "An error occurred during registration",
-        error: error.message,
-      });
     }
+
+    // Generate registration number
+    const regNo = `${sessionRecord.sessionName.slice(0, 4)}${lastRowId}${choosenClass.classid}`;
+
+    // Create registration record
+    await Registration.create(
+      {
+        first_name,
+        last_name,
+        category_id,
+        department_id,
+        year,
+        sex,
+        DOB,
+        email,
+        address,
+        class_id: choosenClass.classid,
+        session_id: session,
+        regNo,
+      },
+      { transaction }
+    );
+
+    // Log activity
+    const activity = await Activities.create(
+      {
+        description: `${username} just registered a student`,
+        performed_by: userid,
+        createdAt: new Date(),
+        role,
+      },
+      { transaction }
+    );
+
+    // Notify all parties
+    const dep = {
+      classid: choosenClass.classid,
+      subjects: compulsorySubjects,
+      transaction,
+      classmessage: "just registered a student to your class",
+      subjectsmessage: "just registered a student to your subject",
+      author: username,
+      activity_id: activity.id,
+      teacherid: choosenClass.teacher,
+    };
+    await notifyallparties(dep);
+
+    // Commit transaction
+    await transaction.commit();
+
+    // Respond with success message
+    return res.status(201).json({
+      message: `Student has been successfully registered with registration number ${regNo} and in class ${choosenClass.classname}`,
+    });
+
   } catch (error) {
-    console.error("Error starting transaction:", error);
+    console.error("Error during registration:", error);
+    if (transaction) {
+      await transaction.rollback();
+    }
     return res.status(500).json({
-      message: "An error occurred while starting the transaction",
+      message: "An error occurred during registration",
       error: error.message,
     });
   }
 };
+
 exports.viewregister = async (req, res, models) => {
   const { class_id, subject_id } = req.params;
   const { Registration, Subjects, Registeredcourses, Sessions, sequelize } =
@@ -234,7 +252,11 @@ exports.viewregister = async (req, res, models) => {
   }
 };
 // Ensure proper dependency injection
-exports.updateregister = async (req, res, { models, objectreducer, assignClass, notifyallparties }) => {
+exports.updateregister = async (
+  req,
+  res,
+  { models, objectreducer, assignClass, notifyallparties }
+) => {
   const { id } = req.params;
   const {
     first_name,
@@ -249,7 +271,15 @@ exports.updateregister = async (req, res, { models, objectreducer, assignClass, 
     address,
     parent,
   } = req.body;
-  const { sequelize, Registration, Sessions, Subjects, Activities, Class, Registeredcourses } = models;
+  const {
+    sequelize,
+    Registration,
+    Sessions,
+    Subjects,
+    Activities,
+    Class,
+    Registeredcourses,
+  } = models;
 
   try {
     const transaction = await sequelize.transaction();
@@ -321,7 +351,9 @@ exports.updateregister = async (req, res, { models, objectreducer, assignClass, 
           });
 
           const lastID = lastRow ? lastRow.id : 0;
-          const regNo = `${sessionDetail.sessionName.slice(0, 4)}${lastID}${chosenClass.classid}`;
+          const regNo = `${sessionDetail.sessionName.slice(0, 4)}${lastID}${
+            chosenClass.classid
+          }`;
 
           allChanges.newobject.regNo = regNo;
 
@@ -330,12 +362,15 @@ exports.updateregister = async (req, res, { models, objectreducer, assignClass, 
             transaction,
           });
 
-          const activity = await Activities.create({
-            description: `${req.payload.username} just admitted a student`,
-            performed_by: req.payload.userid,
-            createdAt: new Date(),
-            role: req.payload.role,
-          }, { transaction });
+          const activity = await Activities.create(
+            {
+              description: `${req.payload.username} just admitted a student`,
+              performed_by: req.payload.userid,
+              createdAt: new Date(),
+              role: req.payload.role,
+            },
+            { transaction }
+          );
 
           const dep = {
             classid: chosenClass.classid,
@@ -387,12 +422,15 @@ exports.updateregister = async (req, res, { models, objectreducer, assignClass, 
             transaction,
           });
 
-          const activity = await Activities.create({
-            description: `${req.payload.username} just updated a student changing class`,
-            performed_by: req.payload.userid,
-            createdAt: new Date(),
-            role: req.payload.role,
-          }, { transaction });
+          const activity = await Activities.create(
+            {
+              description: `${req.payload.username} just updated a student changing class`,
+              performed_by: req.payload.userid,
+              createdAt: new Date(),
+              role: req.payload.role,
+            },
+            { transaction }
+          );
 
           const deps = [
             {

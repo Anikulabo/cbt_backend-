@@ -7,7 +7,7 @@ node_modules/
 # Generated files
 /dist
 /build
-
+/uploads
 # Log files
 *.log
 
