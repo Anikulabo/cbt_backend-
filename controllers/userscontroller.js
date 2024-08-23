@@ -9,8 +9,9 @@ const Score = require("../models/scores");
 const Users = require("../models/users");
 const bcrypt = require("bcrypt");
 const Subjects = require("../models/subjects");
+const { Op } = require("sequelize");
 const Class = require("../models/class");
-exports.loginuser = async (req, res,{typechecker,generateToken}) => {
+exports.loginuser = async (req, res, { typechecker, generateToken }) => {
   const { regno, password } = req.body;
   console.log({ regno, password });
   try {
@@ -26,7 +27,7 @@ exports.loginuser = async (req, res,{typechecker,generateToken}) => {
     const isMatch = await bcrypt.compare(password, detail.password);
     // this is for cass where the password was encrypted and when it wasn't encrypted before being stored in the database
     if (isMatch || password === detail.password) {
-      //generation of token for the user
+      //generation of token for the use`r
       const payload = {
         userid: detail.id,
         username: detail.regNo,
@@ -183,8 +184,8 @@ exports.viewuser = async (req, res) => {
   try {
     let result;
 
-    if (id && id !== '0') {
-      if (searchrole === '2') {
+    if (id && id !== "0") {
+      if (searchrole === "2") {
         const teacher = await Teachers.findOne({
           where: { id },
           attributes: ["fname", "lname", "email", "phoneNo", "address"],
@@ -206,7 +207,7 @@ exports.viewuser = async (req, res) => {
           return res.status(200).json({
             teacherdetail: teacher,
             totalsubjects: subjects.length,
-            handling: classes ? classes.name : 'N/A',
+            handling: classes ? classes.name : "N/A",
           });
         } else {
           await transaction.rollback();
@@ -216,7 +217,7 @@ exports.viewuser = async (req, res) => {
         }
       }
 
-      if (searchrole === '3') {
+      if (searchrole === "3") {
         const query = `
           SELECT registration.first_name, registration.last_name, category.categoryName, departments.name as department,
           registration.year, registration.sex, registration.DOB, registration.email, registration.address,
@@ -246,13 +247,14 @@ exports.viewuser = async (req, res) => {
         }
       }
     } else {
-      if (searchrole === '2') {
+      if (searchrole === "2") {
         result = await Teachers.findAll({
+          where: { category_id: { [Op.gt]: 0 } },
           transaction,
         });
-      } else if (searchrole === '3') {
+      } else if (searchrole === "3") {
         result = await Registration.findAll({
-          transaction
+          transaction,
         });
       } else {
         result = [];
@@ -264,9 +266,10 @@ exports.viewuser = async (req, res) => {
       } else {
         await transaction.commit();
         return res.status(404).json({
-          message: searchrole === '3'
-            ? "You've not registered any student to your database."
-            : "You've not registered any teacher to your database.",
+          message:
+            searchrole === "3"
+              ? "You've not registered any student to your database."
+              : "You've not registered any teacher to your database.",
         });
       }
     }
@@ -278,4 +281,28 @@ exports.viewuser = async (req, res) => {
     });
   }
 };
+exports.getusersdetail = async (req, res) => {
+  const { userid, username, role } = req.user;
+
+  try {
+    let fulldetail;
+    if (role === 3) {
+      fulldetail = await Registration.findOne({ where: { regNo: username } });
+    } else {
+      fulldetail = await Teachers.findOne({ where: { staff_id: username } });
+    }
+
+    if (fulldetail) {
+      return res.status(200).json(fulldetail);
+    } else {
+      return res.status(404).json({
+        message: "No data found for the provided user.",
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching user details:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 exports.deleteuser = async (req, res) => {};

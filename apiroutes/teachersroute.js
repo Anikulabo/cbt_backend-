@@ -8,6 +8,7 @@ const {
 const {
   addteacher,
   updateteacher,
+  viewteachers
 } = require("../controllers/teacherscontrollers");
 const multer = require("multer");
 const upload = multer({
@@ -20,6 +21,7 @@ teachersroute.use(bodyParser.urlencoded({ extended: true }));
 
 // Routes
 teachersroute.post("/", adminauthentication, upload.single("file"), addteacher);
+teachersroute.get("/:cate_id",adminauthentication,viewteachers)
 teachersroute.put("/:id", updateteacher);
 
 module.exports = teachersroute;

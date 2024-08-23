@@ -10,8 +10,16 @@ const bodyParser = require("body-parser");
 const port = process.env.PORT || 3001;
 const app = express();
 const server = createServer(app);
-const io = new Server(server);
+const jwt = require("jsonwebtoken");
+const io = new Server(server,{
+  cors: {
+    origin: "http://localhost:3000", // Your React app's URL
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  },
+});
 const subjecticonUploadDir = path.join(__dirname, 'uploads', 'subjects');
+const jwtSecretKey=process.env.JWT_SECRET_KEY||"KELVIN"
 // Import routes
 const notificationroutes = require("./apiroutes/notificationroute");
 const registrationroutes = require("./apiroutes/registratioroute");
@@ -31,6 +39,22 @@ app.use(express.json()); // Parse JSON bodies
 app.use(bodyParser.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
 // Socket.io setup
+io.use((socket, next) => {
+  const token = socket.handshake.query.token;
+  
+  if (token) {
+    jwt.verify(token, jwtSecretKey, (err, decoded) => {
+      if (err) {
+        return next(new Error('Authentication error'));
+      }
+      // Store user information in socket object
+      socket.user = decoded;
+      next();
+    });
+  } else {
+    next(new Error('Authentication error'));
+  }
+});
 io.on("connection", (socket) => {
   console.log("New client connected");
   socket.emit("message", "Hello from server");

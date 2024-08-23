@@ -4,6 +4,7 @@ const {
   loginuser,
   cbtlogin,
   viewuser,
+  getusersdetail
 } = require("../controllers/userscontroller");
 const {generateToken,typechecker}=require("./authorization")
 const {
@@ -16,4 +17,5 @@ const {
   userroutes.post('/',loginWithDependencies);
   userroutes.get('/cbt',cbtlogin);
   userroutes.get('/:id/:searchrole',adminauthentication,viewuser);
+  userroutes.get('/yourdetail',generalauthentication,getusersdetail)
   module.exports = userroutes;

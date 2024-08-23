@@ -5,22 +5,15 @@ const Sessions = require("../models/session");
 const Teachers = require("../models/teachers");
 const Users = require("../models/users");
 const { sequelize } = require("../models");
-const { Op } = require("sequelize");
+const { Op, where } = require("sequelize");
 const { objectreducer } = require("./jwtgeneration");
 const bcrypt = require("bcrypt");
 const Class = require("../models/class");
 const Subjects = require("../models/subjects");
 const externalUploadDir = path.join(__dirname, "..", "uploads", "users");
 exports.addteacher = async (req, res) => {
-  const {
-    fname,
-    lname,
-    email,
-    phoneNo,
-    address,
-    category_id,
-    department_id,
-  } = req.body;
+  const { fname, lname, email, phoneNo, address, category_id, department_id } =
+    req.body;
 
   let staff_id = req.body.staff_id; // Ensure this is provided or calculated
   const file = req.file; // Get the file from multer
@@ -48,7 +41,10 @@ exports.addteacher = async (req, res) => {
       }
 
       const lastRowId = lastRow ? lastRow.id : 0;
-      const computedStaffId = `${sessionName.sessionName.slice(0, 4)}${lastRowId}`;
+      const computedStaffId = `${sessionName.sessionName.slice(
+        0,
+        4
+      )}${lastRowId}`;
       staff_id = computedStaffId; // Assign computed staff_id
     }
 
@@ -97,13 +93,17 @@ exports.addteacher = async (req, res) => {
     }
 
     await transaction.commit();
-    return res.status(200).json({ message: "The teacher has been successfully registered" });
+    return res
+      .status(200)
+      .json({ message: "The teacher has been successfully registered" });
   } catch (error) {
     if (transaction) {
       await transaction.rollback();
     }
     console.error("Error during registration:", error);
-    return res.status(500).json({ message: "An error occurred during registration" });
+    return res
+      .status(500)
+      .json({ message: "An error occurred during registration" });
   }
 };
 exports.updateteacher = async (req, res) => {
@@ -215,3 +215,52 @@ exports.updateteacher = async (req, res) => {
       .json({ message: "Internal server error", error: error.message });
   }
 };
+exports.viewteachers = async (req, res) => {
+  const { cate_id } = req.params;
+  try {
+    const transaction = await sequelize.transaction();
+    try {
+      let filtered_teachers = await Teachers.findAll({
+        where: { category_id: cate_id },
+        attributes: ["id", "fname"],
+        transaction,
+      });
+
+      if (filtered_teachers.length > 0) {
+        const processedTeachers = await Promise.all(
+          filtered_teachers.map(async (teacher) => {
+            // Fetch subjects offered by the teacher
+            let subject_offered = await Subjects.findAll({
+              where: { teacherid: teacher.id },
+              transaction, // Include transaction here
+            });
+
+            // Add the total number of subjects to the teacher object
+            teacher["Total_subject"] = subject_offered.length;
+
+            // Return the updated teacher object
+            return teacher;
+          })
+        );
+
+        await transaction.commit(); // Commit the transaction after all processing
+        return res.status(201).json({ data: processedTeachers });
+      } else {
+        await transaction.rollback(); // Rollback the transaction if no teachers found
+        return res
+          .status(404)
+          .json({ message: "No teacher has been registered yet to this category" });
+      }
+    } catch (error) {
+      await transaction.rollback(); // Ensure rollback on any error
+      console.error("Error during transaction:", error);
+      return res.status(500).json({ message: "Error occurred during viewing process" });
+    }
+  } catch (error) {
+    console.error("Error starting transaction:", error);
+    return res
+      .status(500)
+      .json({ message: "Internal server error: Unable to start transaction" });
+  }
+};
+
