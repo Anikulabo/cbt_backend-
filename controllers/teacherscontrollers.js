@@ -216,30 +216,43 @@ exports.updateteacher = async (req, res) => {
   }
 };
 exports.viewteachers = async (req, res) => {
-  const { cate_id } = req.params;
+  const { cate_id, dept_id } = req.params;
   try {
     const transaction = await sequelize.transaction();
     try {
-      let filtered_teachers = await Teachers.findAll({
-        where: { category_id: cate_id },
-        attributes: ["id", "fname"],
-        transaction,
-      });
+      let filtered_teachers;
+      if (dept_id > 0) {
+        filtered_teachers = await Teachers.findAll({
+          where: { category_id: cate_id, department_id: dept_id },
+          attributes: ["id", "fname"],
+          transaction,
+        });
+      } else {
+        filtered_teachers = await Teachers.findAll({
+          where: { category_id: cate_id },
+          attributes: ["id", "fname"],
+          transaction,
+        });
+      }
 
       if (filtered_teachers.length > 0) {
         const processedTeachers = await Promise.all(
           filtered_teachers.map(async (teacher) => {
             // Fetch subjects offered by the teacher
-            let subject_offered = await Subjects.findAll({
+            const subject_offered = await Subjects.findAll({
               where: { teacherid: teacher.id },
-              transaction, // Include transaction here
+              attributes: ["id"],
+              transaction,
             });
 
-            // Add the total number of subjects to the teacher object
-            teacher["Total_subject"] = subject_offered.length;
+            // Convert the teacher instance to a plain object
+            const teacherObject = teacher.toJSON();
+
+            // Add the total number of subjects to the plain object
+            teacherObject["Total_subject"] = subject_offered ? subject_offered.length : 0;
 
             // Return the updated teacher object
-            return teacher;
+            return teacherObject;
           })
         );
 
