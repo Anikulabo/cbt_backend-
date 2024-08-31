@@ -1,85 +1,174 @@
-const teacherselect = require("./jwtgeneration");
 const Subjects = require("../models/subjects");
-const { where } = require("sequelize");
+const path = require("path");
+const { teacherselect } = require("./jwtgeneration");
+const fs = require("fs");
+const { Sequelize } = require("sequelize");
+function capitalize(str) {
+  if (!str) return str; // Handle empty string or null
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
 exports.addsubject = async (
   req,
   res,
   { models, io, notifyauser, typechecker }
 ) => {
   const {
-    name, // expect a string
-    categories, // expect an array of numbers
-    departments, // expect an object of form {cate_name: an integer}
-    teachers: teachersInput, // expect an object of the form {cate_name: an array of integer}
-    compulsory, // expect an object of the form {cate_name: boolean}
+    name,
+    categories,
+    departments,
+    teachers: teachersInput,
+    compulsory,
   } = req.body;
-  const { Subjects, sequelize, Categories, Notifications, Activities } = models;
+
+  // Parse the JSON strings into their respective objects or arrays
+  let parsedCategories;
+  let parsedDepartments;
+  let parsedTeachers;
+  let parsedCompulsory;
 
   try {
+    // Handle categories being a JSON array or a comma-separated string
+    if (typeof categories === "string") {
+      parsedCategories = JSON.parse(categories);
+      // If the parsing did not produce an array, try splitting by commas
+      if (!Array.isArray(parsedCategories)) {
+        parsedCategories = categories.split(",").map(Number);
+      }
+    } else {
+      parsedCategories = categories;
+    }
+
+    // Validate that parsedCategories is an array
+    if (!Array.isArray(parsedCategories)) {
+      throw new TypeError("Parsed categories is not an array");
+    }
+
+    parsedDepartments = JSON.parse(departments); // Expecting this to be an object
+    parsedTeachers = JSON.parse(teachersInput); // Expecting this to be an object
+    parsedCompulsory = JSON.parse(compulsory); // Expecting this to be an object
+  } catch (error) {
+    console.error("Error parsing input:", error);
+    return res.status(400).json({ message: "Invalid input format" });
+  }
+
+  const { Subjects, sequelize, Categories, Notifications, Activities } = models;
+  const file = req.file ? req.file : undefined;
+  const externalUploadDir = path.join(__dirname, "..", "uploads", "subjects");
+  // Ensure the upload directory exists
+  if (!fs.existsSync(externalUploadDir)) {
+    fs.mkdirSync(externalUploadDir, { recursive: true });
+  }
+
+  try {
+    // Start the outer transaction
     const transaction = await sequelize.transaction();
+
     try {
+      const subjectsToCreate = [];
       const teachersMap = {};
       const unmannedsubject = [];
-      for (const category of categories) {
+
+      for (const category of parsedCategories) {
+        // Fetch category details
         const cate_detail = await Categories.findOne({
           where: { id: category },
           transaction,
         });
+
         if (!cate_detail) {
+          // Rollback and return if category is not found
           await transaction.rollback();
           return res
             .status(404)
             .json({ message: "No category matches your description" });
         }
 
-        const dept = departments[cate_detail.categoryName];
+        const dept = parsedDepartments[cate_detail.categoryName];
         const cateName = cate_detail.categoryName;
+        let allselectedteachers = [];
+        for (let year = 1; year <= cate_detail.years; year++) {
+          // Select teacher
+          //console.log("Attributes:", Subjects.rawAttributes);
+          // Outputs: "Subjects"
 
-        for (let year = 1; year <= cate_detail.year; year++) {
-          const selectedteacher = teachersInput[cateName]
+          let selectedteacher = parsedTeachers[capitalize(cateName)]
             ? await teacherselect({
-                teacherids: teachersInput[cateName],
+                teacherids: parsedTeachers[capitalize(cateName)],
                 Subjects,
                 transaction,
+                selected: allselectedteachers, // Pass the tracking array
               })
             : 0;
-          let detail = await Subjects.create(
-            {
-              year,
-              category_id: category,
-              department_id: dept,
-              teacherid: selectedteacher,
-              compulsory: compulsory[cateName],
-              name: name,
-            },
-            { transaction }
-          );
+          allselectedteachers.push(selectedteacher);
+          const subjectDetail = {
+            year,
+            category_id: category,
+            department_id: dept,
+            teacherid: selectedteacher,
+            compulsory: parsedCompulsory[cateName],
+            name: name,
+          };
+
+          subjectsToCreate.push(subjectDetail);
+
           if (selectedteacher === 0) {
-            unmannedsubject.push(detail.id);
+            unmannedsubject.push(subjectDetail);
           } else {
             if (teachersMap[selectedteacher]) {
-              teachersMap[selectedteacher].push(detail.id);
+              teachersMap[selectedteacher].push(subjectDetail);
             } else {
-              teachersMap[selectedteacher] = [detail.id];
+              teachersMap[selectedteacher] = [subjectDetail];
             }
           }
         }
-
-        for (const [key, value] of Object.entries(teachersMap)) {
-          await notifyauser(
-            {
-              description: `You've been assigned to teach ${value.length} subjects. Check portal for more details.`,
-              performed_by: 0,
-              roleOfperformer: 0,
-              transaction: transaction,
-              recipient: parseInt(key),
-              roleOfrecipient: 2,
-            },
-            { typechecker, Activities, Notifications, io }
-          );
-        }
       }
+
+      // Bulk create subjects
+      const createdSubjects = await Subjects.bulkCreate(subjectsToCreate, {
+        transaction,
+      });
+      // Notify teachers
+      for (const [key, value] of Object.entries(teachersMap)) {
+        const years_to_teach=value.map((item)=>item.year)
+        await notifyauser(
+          {
+            description: `You've been assigned to teach ${name}  within years: ${years_to_teach.join(", ")}. Check portal for more details.`,
+            performed_by: 0,
+            roleOfperformer: 0,
+            transaction: transaction,
+            recipient: parseInt(key),
+            roleOfrecipient: 2,
+          },
+          { typechecker, Activities, Notifications, io }
+        );
+      }
+
+      // Handle file upload
+      if (file) {
+        //console.log(file)
+        const filePath = path.join(
+          externalUploadDir,
+          `${name}${path.extname(file.originalname)}` // Use original extension
+        );
+
+        await new Promise((resolve, reject) => {
+          fs.writeFile(filePath, file.buffer, (err) => {
+            if (err) {
+              console.error("Error saving file:", err);
+              reject(err);
+            } else {
+              console.log("File path:", filePath);
+              console.log("successfully saved")
+              resolve();
+            }
+          });
+        });
+      }
+
+      // Commit the transaction
       await transaction.commit();
+
+      // Return success message
       return res.status(200).json({
         message:
           unmannedsubject.length === 0
@@ -87,6 +176,7 @@ exports.addsubject = async (
             : `Subjects added successfully. ${unmannedsubject.length} subjects still need teachers. View subjects for more details.`,
       });
     } catch (error) {
+      // Rollback on inner transaction error
       await transaction.rollback();
       console.error("Inner transaction error:", error);
       return res
@@ -98,6 +188,7 @@ exports.addsubject = async (
     return res.status(500).json({ message: "Unable to start transaction" });
   }
 };
+
 exports.viewsuject = async (req, res, { models }) => {
   const { username, role } = req.user;
   const { sequelize, Registeredcourses, Registration, Sessions } = models;

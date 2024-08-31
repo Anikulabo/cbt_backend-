@@ -126,7 +126,7 @@ exports.generateToken = (mainpayload, { typechecker }) => {
 
     // Generate the JWT token
     const token = jwt.sign(payload, jwtSecretKey, { expiresIn: expiration });
-   console.log(token)
+    console.log(token);
     return token;
   } catch (error) {
     console.error("Error:", error);
@@ -398,46 +398,40 @@ exports.objectreducer = (prev, current) => {
 exports.teacherselect = async (arg) => {
   try {
     // Ensure no type mismatch
-    this.typechecker(arg, [
+    /*this.typechecker(arg, [
       { key: "teacherids", type: "array" }, // Array of the teachers we're selecting from
       { key: "Subjects", type: "object" }, // Subjects model dependency
       { key: "transaction", type: "object" }, // Transaction dependency
-    ]);
+    ]);*/
 
-    const { teacherids, Subjects, transaction } = arg;
-    let teachers_to_subjects = [];
-    let no_of_subjects = [];
+    const { teacherids, Subjects, transaction,selected } = arg;
+    let teachersToSubjects = [];
 
-    for (const teacherid of teacherids) {
-      const subjects_taken = await Subjects.findAll({
-        where: { id: teacherid },
+    // Fetch subjects for each teacher and count
+    for (let teacherid of teacherids) {
+      const subjectsTaken = await Subjects.count({
+        where: { teacherid },
         transaction,
       });
-
-      if (subjects_taken.length === 0) {
-        return teacherid;
-      } else {
-        teachers_to_subjects.push({
-          teacherid,
-          no_of_subject: subjects_taken.length,
-        });
-        no_of_subjects.push(subjects_taken.length);
-      }
+      const noOfSelection=selected?selected.filter((item)=>item===teacherid).length:0
+      teachersToSubjects.push({ teacherid, noOfSubjects: subjectsTaken+noOfSelection });
     }
 
-    const min_subject_count = Math.min(...no_of_subjects);
-    const choosenteacher = teachers_to_subjects.find(
-      (detail) => detail.no_of_subject === min_subject_count
+    // Find the teacher with the minimum number of subjects
+    const minSubjectCount = Math.min(...teachersToSubjects.map(t => t.noOfSubjects));
+    const chosenTeacher = teachersToSubjects.find(
+      (detail) => detail.noOfSubjects === minSubjectCount
     );
 
-    return choosenteacher ? choosenteacher.teacherid : null;
+    return chosenTeacher ? chosenTeacher.teacherid : null;
   } catch (error) {
     console.error("error:", error);
     throw error; // Optionally rethrow the error to let the caller handle it
   }
 };
 
-exports.createUploadMiddleware=(externalUploadDir)=> {
+
+exports.createUploadMiddleware = (externalUploadDir) => {
   // Ensure the directory exists
   console.log("saving image");
   if (!fs.existsSync(externalUploadDir)) {
@@ -473,20 +467,23 @@ exports.createUploadMiddleware=(externalUploadDir)=> {
       }
     },
   }).single("image"); // 'image' is the field name in the form
-}
+};
 // Middleware to handle base64 image
 const externalUploadDir = path.join(__dirname, "..", "uploads", "users");
 
 // Middleware to handle Base64 image processing
 exports.handleBase64Image = async (req, res, next) => {
   const { file, staff_id } = req.body;
-  console.log(file)
+  console.log(file);
   if (file && staff_id) {
     try {
       // Process Base64 image data
       const base64Data = file.replace(/^data:image\/\w+;base64,/, "");
       const buffer = Buffer.from(base64Data, "base64");
-      const filePath = path.join(externalUploadDir, `${staff_id}${path.extname("image.jpeg")}`);
+      const filePath = path.join(
+        externalUploadDir,
+        `${staff_id}${path.extname("image.jpeg")}`
+      );
 
       await new Promise((resolve, reject) => {
         fs.writeFile(filePath, buffer, (err) => {
@@ -510,4 +507,3 @@ exports.handleBase64Image = async (req, res, next) => {
     next();
   }
 };
-

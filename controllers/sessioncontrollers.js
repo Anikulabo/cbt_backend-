@@ -8,7 +8,7 @@ exports.notifyauser = async (
   const expectedKeys = [
     { key: "description", type: "string" },
     { key: "performed_by", type: "number" },
-    { key: "roleOfperformer", type: "string" },
+    { key: "roleOfperformer", type: "number" },
     { key: "transaction", type: "object" },
     { key: "recipient", type: "number" },
     { key: "roleOfrecipient", type: "number" },
